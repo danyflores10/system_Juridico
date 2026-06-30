@@ -4,6 +4,7 @@ Frontend/.next/
 Frontend/out/
 Frontend/.env*
 Frontend/npm-debug.log*
+Frontend/.git.local.backup/
 
 # Django / Python
 Backend/venv/
