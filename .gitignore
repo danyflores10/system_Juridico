@@ -1,0 +1,20 @@
+﻿# Node / Next.js
+Frontend/node_modules/
+Frontend/.next/
+Frontend/out/
+Frontend/.env*
+Frontend/npm-debug.log*
+
+# Django / Python
+Backend/venv/
+Backend/.venv/
+Backend/__pycache__/
+Backend/**/*.pyc
+Backend/db.sqlite3
+Backend/.env
+Backend/media/
+
+# General
+.DS_Store
+Thumbs.db
+.vscode/
