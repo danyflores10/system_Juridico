@@ -59,29 +59,29 @@ export function MailView({ mail, onClose }: MailDisplayProps) {
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Close message" onClick={handleClose}>
+              <Button variant="ghost" size="icon-sm" aria-label="Cerrar mensaje" onClick={handleClose}>
                 <X />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Close message</TooltipContent>
+            <TooltipContent>Cerrar mensaje</TooltipContent>
           </Tooltip>
           <Separator className="h-4 data-vertical:self-center" orientation="vertical" />
           <div className="flex items-center gap-0">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon-sm" aria-label="Previous message">
+                <Button variant="ghost" size="icon-sm" aria-label="Mensaje anterior">
                   <ChevronLeft />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Previous message</TooltipContent>
+              <TooltipContent>Mensaje anterior</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon-sm" aria-label="Next message">
+                <Button variant="ghost" size="icon-sm" aria-label="Mensaje siguiente">
                   <ChevronRight />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Next message</TooltipContent>
+              <TooltipContent>Mensaje siguiente</TooltipContent>
             </Tooltip>
           </div>
         </div>
@@ -89,33 +89,33 @@ export function MailView({ mail, onClose }: MailDisplayProps) {
         <div className="ml-auto flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Pin thread">
+              <Button variant="ghost" size="icon-sm" aria-label="Destacar conversación">
                 <Pin />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Pin thread</TooltipContent>
+            <TooltipContent>Destacar conversación</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Archive">
+              <Button variant="ghost" size="icon-sm" aria-label="Archivar">
                 <Archive />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Archive</TooltipContent>
+            <TooltipContent>Archivar</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Reply">
+              <Button variant="ghost" size="icon-sm" aria-label="Responder">
                 <Reply />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Reply</TooltipContent>
+            <TooltipContent>Responder</TooltipContent>
           </Tooltip>
           <Tooltip>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" aria-label="More actions">
+                  <Button variant="ghost" size="icon-sm" aria-label="Más acciones">
                     <EllipsisVertical />
                   </Button>
                 </TooltipTrigger>
@@ -124,36 +124,36 @@ export function MailView({ mail, onClose }: MailDisplayProps) {
                 <DropdownMenuGroup>
                   <DropdownMenuItem>
                     <ReplyAll />
-                    Reply all
+                    Responder a todos
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Forward />
-                    Forward
+                    Reenviar
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem>
                     <MailOpen />
-                    Mark as unread
+                    Marcar como no leído
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Tag />
-                    Add label
+                    Agregar etiqueta
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-            <TooltipContent>More actions</TooltipContent>
+            <TooltipContent>Más acciones</TooltipContent>
           </Tooltip>
           <Separator className="h-4 data-vertical:self-center" orientation="vertical" />
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Move to trash">
+              <Button variant="ghost" size="icon-sm" aria-label="Mover a la papelera">
                 <Trash2 className="text-destructive" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Move to trash</TooltipContent>
+            <TooltipContent>Mover a la papelera</TooltipContent>
           </Tooltip>
         </div>
       </div>
@@ -186,7 +186,8 @@ export function MailView({ mail, onClose }: MailDisplayProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-muted-foreground text-xs">
-                    To: <span className="text-foreground">{mail.to.map((recipient) => recipient.name).join(", ")}</span>
+                    Para:{" "}
+                    <span className="text-foreground">{mail.to.map((recipient) => recipient.name).join(", ")}</span>
                   </div>
 
                   {mail.cc?.length ? (
@@ -214,7 +215,7 @@ export function MailView({ mail, onClose }: MailDisplayProps) {
                         "data-[state=open]:bg-transparent data-[state=open]:text-muted-foreground",
                       )}
                     >
-                      Attachments ({mail.attachments.length})
+                      Adjuntos ({mail.attachments.length})
                       <ChevronDown className="group-data-[state=open]:rotate-180" />
                     </Button>
                   </CollapsibleTrigger>
@@ -244,7 +245,7 @@ export function MailView({ mail, onClose }: MailDisplayProps) {
                 <InputGroupAddon align="inline-start">
                   <Reply />
                 </InputGroupAddon>
-                <InputGroupInput className="text-xs" placeholder={`Reply ${mail.from.name}...`} />
+                <InputGroupInput className="text-xs" placeholder={`Responder a ${mail.from.name}...`} />
                 <InputGroupAddon className="gap-1" align="inline-end">
                   <InputGroupButton variant="ghost">
                     <Smile />
@@ -260,7 +261,7 @@ export function MailView({ mail, onClose }: MailDisplayProps) {
             </div>
           </div>
         ) : (
-          <div className="grid h-full place-items-center text-muted-foreground text-sm">No email selected</div>
+          <div className="grid h-full place-items-center text-muted-foreground text-sm">Ningún correo seleccionado</div>
         )}
       </div>
     </div>

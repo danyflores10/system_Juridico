@@ -1,19 +1,19 @@
 export const users = [
   {
     id: "1",
-    name: "Arham Khan",
-    username: "Aarhamkhnz",
-    email: "hello@arhamkhnz.com",
+    name: "Daniel Wilson Flores",
+    username: "dwflores",
+    email: "daniel@consultorjuridico.local",
     avatar: "https://avatars.githubusercontent.com/u/43849669",
-    role: "administrator",
+    role: "abogado administrador",
   },
   {
     id: "2",
-    name: "Ammar Khan",
-    username: "ammarkhnz",
-    email: "hello@ammarkhnz.com",
+    name: "Equipo Jurídico",
+    username: "equipojuridico",
+    email: "equipo@consultorjuridico.local",
     avatar: "",
-    role: "admin",
+    role: "gestión legal",
   },
 ];
 

@@ -9,6 +9,7 @@ import listPlugin from "@fullcalendar/react/list";
 import multiMonthPlugin from "@fullcalendar/react/multimonth";
 import timeGridPlugin from "@fullcalendar/react/timegrid";
 import { differenceInCalendarDays, endOfMonth, format, startOfMonth } from "date-fns";
+import { es } from "date-fns/locale";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, XIcon } from "lucide-react";
 
 import { EventCalendarViews } from "@/components/calendar/event-calendar-views";
@@ -19,17 +20,17 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { demoEvents } from "./events-data";
 
 const views = [
-  { key: "dayGridMonth", label: "Month" },
-  { key: "timeGridWeek", label: "Week" },
-  { key: "timeGridDay", label: "Day" },
+  { key: "dayGridMonth", label: "Mes" },
+  { key: "timeGridWeek", label: "Semana" },
+  { key: "timeGridDay", label: "Día" },
 ];
 
 const calendars = [
-  { key: "all", label: "All calendars" },
-  { key: "work", label: "Work" },
+  { key: "all", label: "Todas las agendas" },
+  { key: "work", label: "Laboral" },
   { key: "personal", label: "Personal" },
-  { key: "team", label: "Team" },
-  { key: "focus", label: "Focus time" },
+  { key: "team", label: "Equipo" },
+  { key: "focus", label: "Trabajo concentrado" },
 ];
 
 const plugins = [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, multiMonthPlugin];
@@ -42,7 +43,7 @@ export function Calendar() {
     const now = new Date();
 
     return {
-      title: format(now, "MMMM yyyy"),
+      title: format(now, "MMMM yyyy", { locale: es }),
       days: differenceInCalendarDays(endOfMonth(now), startOfMonth(now)) + 1,
     };
   });
@@ -55,7 +56,7 @@ export function Calendar() {
         <div className="flex min-w-0 shrink-0 flex-col gap-1">
           <div className="font-medium text-lg leading-none">{title}</div>
           <p className="text-muted-foreground text-sm">
-            {days} days - {eventCount} events
+            {days} días - {eventCount} eventos
           </p>
         </div>
 
@@ -80,7 +81,7 @@ export function Calendar() {
               <ChevronLeft />
             </Button>
             <Button variant="outline" onClick={() => controller.today()}>
-              Today
+              Hoy
             </Button>
             <Button size="icon" variant="outline" onClick={() => controller.next()}>
               <ChevronRight />
@@ -107,7 +108,7 @@ export function Calendar() {
           </Select>
           <Button>
             <Plus />
-            Add event
+            Agregar evento
           </Button>
         </div>
       </div>
@@ -116,6 +117,7 @@ export function Calendar() {
         controller={controller}
         initialView={views[0].key}
         plugins={[...plugins]}
+        locale="es"
         popoverCloseContent={() => <XIcon className="size-5 text-muted-foreground group-hover:text-foreground" />}
         events={demoEvents}
         nowIndicator

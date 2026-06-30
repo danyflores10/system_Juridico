@@ -1,13 +1,13 @@
-# Frontend - Sistema Juridico
+# Frontend - Consultor Jurídico
 
-Aplicacion web del Sistema Juridico construida con Next.js, React, TypeScript y Tailwind CSS.
+Aplicación web de Consultor Jurídico construida con Next.js, React, TypeScript y Tailwind CSS. Esta etapa utiliza datos locales y no requiere base de datos.
 
 ## Requisitos
 
 - Node.js 20 o superior
 - npm
 
-## Instalacion
+## Instalación
 
 Desde la raiz del repositorio:
 
@@ -22,20 +22,20 @@ npm install
 npm run dev
 ```
 
-Abre la aplicacion en:
+Abre la aplicación en:
 
 ```text
 http://localhost:3000
 ```
 
-## Produccion
+## Producción
 
 ```bash
 npm run build
 npm run start
 ```
 
-## Calidad de codigo
+## Calidad de código
 
 ```bash
 npm run lint
@@ -50,7 +50,7 @@ Frontend/
 +-- src/app/          # Rutas y pantallas de Next.js
 +-- src/components/   # Componentes reutilizables
 +-- src/lib/          # Utilidades y configuracion compartida
-+-- src/navigation/   # Configuracion de navegacion
++-- src/navigation/   # Configuración de navegación
 +-- media/            # Recursos visuales del proyecto
 ```
 

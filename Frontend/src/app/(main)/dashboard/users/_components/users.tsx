@@ -79,9 +79,9 @@ export function Users({ users }: { users: UserRow[] }) {
   return (
     <Card>
       <CardHeader className="border-b has-data-[slot=card-action]:grid-cols-1 md:has-data-[slot=card-action]:grid-cols-[1fr_auto]">
-        <CardTitle className="text-xl leading-none">Users</CardTitle>
+        <CardTitle className="text-xl leading-none">Usuarios</CardTitle>
         <CardDescription className="max-w-sm leading-snug">
-          Manage your organization members and their access.
+          Administra los integrantes del equipo y sus niveles de acceso.
         </CardDescription>
         <CardAction className="col-start-1 row-start-auto flex w-full flex-wrap justify-start gap-2 justify-self-stretch md:col-start-2 md:row-span-2 md:row-start-1 md:w-auto md:flex-nowrap md:justify-end md:justify-self-end">
           <InputGroup className="h-7 w-full md:w-64">
@@ -90,7 +90,7 @@ export function Users({ users }: { users: UserRow[] }) {
             </InputGroupAddon>
             <InputGroupInput
               className="h-7"
-              placeholder="Search users..."
+              placeholder="Buscar usuarios..."
               value={searchQuery}
               onChange={(event) => {
                 table.getColumn("search")?.setFilterValue(event.target.value || undefined);
@@ -102,16 +102,16 @@ export function Users({ users }: { users: UserRow[] }) {
             </InputGroupAddon>
           </InputGroup>
           <Button variant="outline" size="sm">
-            <SlidersHorizontal /> Hide
+            <SlidersHorizontal /> Ocultar
           </Button>
           <Button variant="outline" size="sm">
-            <Cog /> Customize
+            <Cog /> Personalizar
           </Button>
           <Button variant="outline" size="sm">
-            <Download /> Export
+            <Download /> Exportar
           </Button>
           <Button size="sm">
-            <Plus /> Add User
+            <Plus /> Agregar usuario
           </Button>
         </CardAction>
       </CardHeader>
@@ -120,14 +120,14 @@ export function Users({ users }: { users: UserRow[] }) {
           <div className="flex flex-wrap items-center gap-3">
             <Select value={roleFilter} onValueChange={(value) => setColumnSelectFilter("role", value)}>
               <SelectTrigger size="sm">
-                <span className="text-muted-foreground">Role:</span>
+                <span className="text-muted-foreground">Rol:</span>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" align="start">
                 <SelectGroup>
                   {filters.role.map((option) => (
                     <SelectItem key={option} value={option}>
-                      {option}
+                      {option === "All" ? "Todos" : option}
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -136,14 +136,14 @@ export function Users({ users }: { users: UserRow[] }) {
 
             <Select value={teamFilter} onValueChange={(value) => setColumnSelectFilter("team", value)}>
               <SelectTrigger size="sm">
-                <span className="text-muted-foreground">Team:</span>
+                <span className="text-muted-foreground">Equipo:</span>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" align="start">
                 <SelectGroup>
                   {filters.team.map((option) => (
                     <SelectItem key={option} value={option}>
-                      {option}
+                      {option === "All" ? "Todos" : option}
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -152,14 +152,14 @@ export function Users({ users }: { users: UserRow[] }) {
 
             <Select value={statusFilter} onValueChange={(value) => setColumnSelectFilter("status", value)}>
               <SelectTrigger size="sm">
-                <span className="text-muted-foreground">Status:</span>
+                <span className="text-muted-foreground">Estado:</span>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" align="start">
                 <SelectGroup>
                   {filters.status.map((option) => (
                     <SelectItem key={option} value={option}>
-                      {option}
+                      {option === "All" ? "Todos" : option}
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -169,14 +169,14 @@ export function Users({ users }: { users: UserRow[] }) {
 
           <Select value={workspaceFilter} onValueChange={(value) => setColumnSelectFilter("workspace", value)}>
             <SelectTrigger size="sm">
-              <span className="text-muted-foreground">Workspace:</span>
+              <span className="text-muted-foreground">Área:</span>
               <SelectValue />
             </SelectTrigger>
             <SelectContent position="popper" align="end">
               <SelectGroup>
                 {filters.workspace.map((option) => (
                   <SelectItem key={option} value={option}>
-                    {option}
+                    {option === "All" ? "Todas" : option}
                   </SelectItem>
                 ))}
               </SelectGroup>
@@ -185,14 +185,14 @@ export function Users({ users }: { users: UserRow[] }) {
         </div>
 
         <div className="flex items-center justify-between gap-3 px-4">
-          <div className="text-muted-foreground text-sm tabular-nums">{selectedCount} selected</div>
+          <div className="text-muted-foreground text-sm tabular-nums">{selectedCount} seleccionados</div>
 
           <Tabs defaultValue="list">
             <TabsList>
-              <TabsTrigger value="list" aria-label="List view">
+              <TabsTrigger value="list" aria-label="Vista de lista">
                 <Rows3 />
               </TabsTrigger>
-              <TabsTrigger value="grid" aria-label="Grid view">
+              <TabsTrigger value="grid" aria-label="Vista de cuadrícula">
                 <Grid />
               </TabsTrigger>
             </TabsList>

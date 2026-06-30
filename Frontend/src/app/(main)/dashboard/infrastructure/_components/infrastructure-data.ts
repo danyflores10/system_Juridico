@@ -30,10 +30,10 @@ export interface InfrastructureGroup {
 export const infrastructureGroups: InfrastructureGroup[] = [
   {
     name: "Admin Console",
-    organization: "Weblabs Studio",
+    organization: "Consultor Jurídico",
     rows: [
       {
-        domain: "next-shadcn-admin-dashboard.vercel.app/dashboard",
+        domain: "consultorjuridico.local/dashboard",
         platform: {
           name: "Next.js",
           icon: siNextdotjs,
@@ -54,7 +54,7 @@ export const infrastructureGroups: InfrastructureGroup[] = [
     organization: "Aiy Cap",
     rows: [
       {
-        domain: "next-shadcn-admin-dashboard.vercel.app/analytics",
+        domain: "consultorjuridico.local/analytics",
         platform: {
           name: "React",
           icon: siReact,
@@ -69,7 +69,7 @@ export const infrastructureGroups: InfrastructureGroup[] = [
         resources: { cpu: 49, ram: 42, disk: 44 },
       },
       {
-        domain: "next-shadcn-admin-dashboard.vercel.app/reports",
+        domain: "consultorjuridico.local/reports",
         platform: {
           name: "Remix",
           icon: siRemix,
@@ -90,7 +90,7 @@ export const infrastructureGroups: InfrastructureGroup[] = [
     organization: "Storeframe",
     rows: [
       {
-        domain: "next-shadcn-admin-dashboard.vercel.app/kanban",
+        domain: "consultorjuridico.local/kanban",
         platform: {
           name: "Node.js",
           icon: siNodedotjs,

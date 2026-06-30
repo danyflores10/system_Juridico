@@ -48,23 +48,23 @@ function TitleColumnHeader({ column }: { column: Column<Task, unknown> }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="-ml-3 text-muted-foreground data-[state=open]:bg-accent">
-          Title
+          Título
           <SortIcon sortDirection={column.getIsSorted()} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         <DropdownMenuItem onSelect={() => column.toggleSorting(false)}>
           <ArrowUp />
-          Asc
+          Ascendente
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => column.toggleSorting(true)}>
           <ArrowDown />
-          Desc
+          Descendente
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => column.clearSorting()}>
           <RotateCcw />
-          Reset
+          Restablecer
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -78,7 +78,7 @@ export const columns: ColumnDef<Task>[] = [
       <Checkbox
         checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label="Seleccionar todas"
         className="translate-y-0.5"
       />
     ),
@@ -86,7 +86,7 @@ export const columns: ColumnDef<Task>[] = [
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label="Seleccionar fila"
         className="translate-y-0.5"
       />
     ),
@@ -95,7 +95,7 @@ export const columns: ColumnDef<Task>[] = [
   },
   {
     accessorKey: "id",
-    header: "Task",
+    header: "Expediente",
     cell: ({ row }) => <div className="w-20 font-mono text-muted-foreground text-sm">{row.getValue("id")}</div>,
     enableSorting: false,
     enableHiding: false,
@@ -120,7 +120,7 @@ export const columns: ColumnDef<Task>[] = [
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: "Estado",
     cell: ({ row }) => {
       const status = statuses.find((status) => status.value === row.getValue("status"));
 
@@ -141,7 +141,7 @@ export const columns: ColumnDef<Task>[] = [
   },
   {
     accessorKey: "priority",
-    header: "Priority",
+    header: "Prioridad",
     cell: ({ row }) => {
       const priority = priorities.find((priority) => priority.value === row.getValue("priority"));
 
@@ -171,16 +171,16 @@ export const columns: ColumnDef<Task>[] = [
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-sm" className="text-muted-foreground data-[state=open]:bg-muted">
                 <MoreHorizontal />
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">Abrir menú</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem>Edit</DropdownMenuItem>
-              <DropdownMenuItem>Make a copy</DropdownMenuItem>
-              <DropdownMenuItem>Favorite</DropdownMenuItem>
+              <DropdownMenuItem>Editar</DropdownMenuItem>
+              <DropdownMenuItem>Duplicar</DropdownMenuItem>
+              <DropdownMenuItem>Marcar como favorita</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger>Tipos</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   <DropdownMenuRadioGroup value={task.label}>
                     {labels.map((label) => (
@@ -193,7 +193,7 @@ export const columns: ColumnDef<Task>[] = [
               </DropdownMenuSub>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                Delete
+                Eliminar
                 <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
               </DropdownMenuItem>
             </DropdownMenuContent>

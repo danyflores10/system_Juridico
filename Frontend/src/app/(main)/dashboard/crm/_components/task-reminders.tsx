@@ -60,7 +60,7 @@ export function TaskReminders() {
                     <div className="truncate font-medium text-primary-foreground text-xs leading-none">
                       Product demo with Tim
                     </div>
-                    <div className="truncate text-[10px] text-primary-foreground/75">Weblabs Studio</div>
+                    <div className="truncate text-[10px] text-primary-foreground/75">Consultor Jurídico</div>
                   </div>
                 </div>
               </div>

@@ -46,27 +46,27 @@ export type NavItem = {
 };
 
 export const navItems: NavItem[] = [
-  { id: "inbox", title: "Inbox", label: "24", icon: Inbox, isActive: true },
-  { id: "mentions", title: "Mentions", label: "3", icon: Mail, isActive: false },
-  { id: "snoozed", title: "Snoozed", icon: Clock3, isActive: false },
-  { id: "sent", title: "Sent", icon: Send, isActive: false },
-  { id: "all", title: "All conversations", icon: MessageCircle, isActive: false },
-  { id: "unassigned", title: "Unassigned", label: "7", icon: User, isActive: false },
+  { id: "inbox", title: "Bandeja de entrada", label: "24", icon: Inbox, isActive: true },
+  { id: "mentions", title: "Menciones", label: "3", icon: Mail, isActive: false },
+  { id: "snoozed", title: "Pospuestas", icon: Clock3, isActive: false },
+  { id: "sent", title: "Enviadas", icon: Send, isActive: false },
+  { id: "all", title: "Todas las conversaciones", icon: MessageCircle, isActive: false },
+  { id: "unassigned", title: "Sin asignar", label: "7", icon: User, isActive: false },
 ];
 
 export const channelItems: NavItem[] = [
-  { id: "email", title: "Email", label: "18", icon: Mail, isActive: false },
+  { id: "email", title: "Correo", label: "18", icon: Mail, isActive: false },
   { id: "chat", title: "Chat", label: "5", icon: MessageCircle, isActive: false },
   { id: "whatsapp", title: "WhatsApp", label: "1", icon: Phone, isActive: false },
   { id: "instagram", title: "Instagram", label: "0", icon: Phone, isActive: false },
   { id: "facebook", title: "Facebook", label: "0", icon: Phone, isActive: false },
-  { id: "phone", title: "Phone", label: "0", icon: Phone, isActive: false },
+  { id: "phone", title: "Teléfono", label: "0", icon: Phone, isActive: false },
 ];
 
 export const viewItems: NavItem[] = [
-  { id: "vip", title: "VIP Customers", label: "8", icon: Star, isActive: false },
-  { id: "orders", title: "Orders & Returns", label: "6", icon: Inbox, isActive: false },
-  { id: "feedback", title: "Product Feedback", label: "2", icon: MessageCircle, isActive: false },
+  { id: "vip", title: "Clientes prioritarios", label: "8", icon: Star, isActive: false },
+  { id: "orders", title: "Casos en seguimiento", label: "6", icon: Inbox, isActive: false },
+  { id: "feedback", title: "Consultas recibidas", label: "2", icon: MessageCircle, isActive: false },
 ];
 
 export const conversations: Conversation[] = [
@@ -85,7 +85,7 @@ export const conversations: Conversation[] = [
       name: "Olivia Rhye",
       role: "Senior DevOps Engineer",
       company: "Railway Systems Inc.",
-      email: "olivia.rhye@weblabs.studio",
+      email: "olivia.rhye@consultorjuridico.local",
       phone: "+1 (415) 555-0123",
       website: "railway.co",
       location: "San Francisco, CA, USA",
@@ -143,7 +143,7 @@ export const conversations: Conversation[] = [
       name: "Phoenix Baker",
       role: "Operations Lead",
       company: "Meridian Retail Group",
-      email: "phoenix.baker@weblabs.studio",
+      email: "phoenix.baker@consultorjuridico.local",
       phone: "+1 (312) 555-0184",
       website: "meridianretail.com",
       location: "Chicago, IL, USA",
@@ -260,7 +260,7 @@ export const conversations: Conversation[] = [
       name: "Demi Wilkinson",
       role: "Sustainability Manager",
       company: "BrightFuture Co.",
-      email: "demi.wilkinson@weblabs.studio",
+      email: "demi.wilkinson@consultorjuridico.local",
       phone: "+1 (415) 555-0189",
       website: "brightfuture.co",
       location: "San Francisco, CA, USA",
@@ -363,7 +363,7 @@ export const conversations: Conversation[] = [
       name: "Natali Craig",
       role: "Finance Manager",
       company: "Lumen Studio",
-      email: "natali.craig@weblabs.studio",
+      email: "natali.craig@consultorjuridico.local",
       phone: "+39 02 5555 0184",
       website: "lumenstudio.co",
       location: "Milan, Italy",
@@ -515,7 +515,7 @@ export const conversations: Conversation[] = [
       name: "Andi Lane",
       role: "Backend Lead",
       company: "LedgerLoop",
-      email: "andi.lane@weblabs.studio",
+      email: "andi.lane@consultorjuridico.local",
       phone: "+353 1 555 0189",
       website: "ledgerloop.io",
       location: "Dublin, Ireland",
@@ -565,7 +565,7 @@ export const conversations: Conversation[] = [
       name: "Kate Morrison",
       role: "Product Manager",
       company: "Storefront Labs",
-      email: "kate.morrison@weblabs.studio",
+      email: "kate.morrison@consultorjuridico.local",
       phone: "+1 (213) 555-0192",
       website: "storefrontlabs.com",
       location: "Los Angeles, CA, USA",
@@ -667,7 +667,7 @@ export const conversations: Conversation[] = [
       name: "Ariana Decker",
       role: "QA Analyst",
       company: "Northstar Health",
-      email: "ariana.decker@weblabs.studio",
+      email: "ariana.decker@consultorjuridico.local",
       phone: "+1 (617) 555-0188",
       website: "northstarhealth.com",
       location: "Boston, MA, USA",
@@ -817,7 +817,7 @@ export const conversations: Conversation[] = [
       name: "Koray Okumus",
       role: "Mobile Lead",
       company: "MobiSolar Ltd.",
-      email: "koray.okumus@weblabs.studio",
+      email: "koray.okumus@consultorjuridico.local",
       phone: "+254 711 555 0182",
       website: "mobisolar.co.ke",
       location: "Nairobi, Kenya",
@@ -918,7 +918,7 @@ export const conversations: Conversation[] = [
       name: "Mollie Hall",
       role: "Compliance Officer",
       company: "NovaPay Ltd.",
-      email: "mollie.hall@weblabs.studio",
+      email: "mollie.hall@consultorjuridico.local",
       phone: "+44 20 5555 0178",
       website: "novapay.co.uk",
       location: "London, UK",
@@ -1068,7 +1068,7 @@ export const conversations: Conversation[] = [
       name: "Sienna Hewitt",
       role: "Finance Director",
       company: "Volta Energy AB",
-      email: "sienna.hewitt@weblabs.studio",
+      email: "sienna.hewitt@consultorjuridico.local",
       phone: "+46 73 555 0168",
       website: "voltaenergy.se",
       location: "Malmö, Sweden",
@@ -1118,7 +1118,7 @@ export const conversations: Conversation[] = [
       name: "Noah Pierre",
       role: "Procurement Manager",
       company: "First Atlantic Bank NG",
-      email: "noah.pierre@weblabs.studio",
+      email: "noah.pierre@consultorjuridico.local",
       phone: "+234 805 555 0125",
       website: "firstatlanticbank.ng",
       location: "Abuja, Nigeria",
@@ -1257,6 +1257,6 @@ export const conversations: Conversation[] = [
 ];
 
 export const currentUser = {
-  name: "Arham Khan",
-  email: "arham.khan@weblabs.studio",
+  name: "Daniel Wilson Flores",
+  email: "daniel@consultorjuridico.local",
 };

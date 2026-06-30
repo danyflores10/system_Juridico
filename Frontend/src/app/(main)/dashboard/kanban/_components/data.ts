@@ -24,7 +24,7 @@ export const tagTones: Record<TaskTeam, string> = {
 
 export const taskOwners = {
   arham: {
-    name: "Arham Khan",
+    name: "Daniel Wilson Flores",
     tone: "[&_[data-slot=avatar-fallback]]:bg-zinc-100 [&_[data-slot=avatar-fallback]]:text-zinc-700 after:border-zinc-200 dark:[&_[data-slot=avatar-fallback]]:bg-zinc-500/15 dark:[&_[data-slot=avatar-fallback]]:text-zinc-300 dark:after:border-zinc-500/20",
   },
   junaid: {

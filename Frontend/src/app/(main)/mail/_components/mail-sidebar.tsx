@@ -51,7 +51,7 @@ export function MailSidebar() {
                   variant="ghost"
                   size="icon-sm"
                   className={accountTriggerClassName}
-                  aria-label={`Open ${selectedAccount.label} menu`}
+                  aria-label={`Abrir menú de ${selectedAccount.label}`}
                 >
                   <AccountMarker account={selectedAccount} isSelected />
                 </Button>
@@ -83,7 +83,7 @@ export function MailSidebar() {
                     key={account.id}
                     className={accountTriggerClassName}
                     value={String(account.id)}
-                    aria-label={`Select ${account.label}`}
+                    aria-label={`Seleccionar ${account.label}`}
                   >
                     <AccountMarker account={account} />
                   </ToggleGroupItem>
@@ -92,7 +92,7 @@ export function MailSidebar() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" aria-label="Open account menu">
+                  <Button variant="ghost" size="icon-sm" aria-label="Abrir menú de cuenta">
                     <EllipsisVertical />
                   </Button>
                 </DropdownMenuTrigger>
@@ -111,7 +111,7 @@ export function MailSidebar() {
 
         <Button size={isCollapsed ? "icon-sm" : "sm"} variant="outline" className="group-data-[state=expanded]:w-full">
           <PenLine data-icon="inline-start" />
-          <span className="group-data-[state=collapsed]:hidden">New email</span>
+          <span className="group-data-[state=collapsed]:hidden">Nuevo correo</span>
         </Button>
       </SidebarHeader>
       <SidebarContent>
@@ -120,7 +120,7 @@ export function MailSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="font-normal">Folders</SidebarGroupLabel>
+          <SidebarGroupLabel className="font-normal">Carpetas</SidebarGroupLabel>
           <SidebarMenu className="gap-1">{mailNavigation.folders.map(renderNavItem)}</SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
@@ -183,7 +183,7 @@ function AccountMenuContent({
     <DropdownMenuContent className="w-56" {...props}>
       {showAccounts && (
         <>
-          <DropdownMenuLabel>Accounts</DropdownMenuLabel>
+          <DropdownMenuLabel>Cuentas</DropdownMenuLabel>
           <DropdownMenuGroup>
             <DropdownMenuRadioGroup
               value={String(selectedAccountId)}
@@ -211,22 +211,22 @@ function AccountMenuContent({
       <DropdownMenuGroup>
         <DropdownMenuItem>
           <UserPlus />
-          Add account
+          Agregar cuenta
         </DropdownMenuItem>
         <DropdownMenuItem>
           <UsersRound />
-          Manage accounts
+          Administrar cuentas
         </DropdownMenuItem>
         <DropdownMenuItem>
           <Settings2 />
-          Account settings
+          Configuración de cuenta
         </DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <DropdownMenuGroup>
         <DropdownMenuItem>
           <LogOut />
-          Sign out
+          Cerrar sesión
         </DropdownMenuItem>
       </DropdownMenuGroup>
     </DropdownMenuContent>

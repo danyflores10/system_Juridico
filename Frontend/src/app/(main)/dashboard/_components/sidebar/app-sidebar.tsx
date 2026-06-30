@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { CircleHelp, ClipboardList, Command, Database, File, Search, Settings } from "lucide-react";
+import { CircleHelp, ClipboardList, Database, File, Scale, Search, Settings } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 
 import {
@@ -26,34 +26,34 @@ import { SidebarSupportCard } from "./sidebar-support-card";
 const _data = {
   navSecondary: [
     {
-      title: "Settings",
+      title: "Configuración",
       url: "#",
       icon: Settings,
     },
     {
-      title: "Get Help",
+      title: "Obtener ayuda",
       url: "#",
       icon: CircleHelp,
     },
     {
-      title: "Search",
+      title: "Buscar",
       url: "#",
       icon: Search,
     },
   ],
   documents: [
     {
-      name: "Data Library",
+      name: "Biblioteca jurídica",
       url: "#",
       icon: Database,
     },
     {
-      name: "Reports",
+      name: "Informes",
       url: "#",
       icon: ClipboardList,
     },
     {
-      name: "Word Assistant",
+      name: "Asistente documental",
       url: "#",
       icon: File,
     },
@@ -79,7 +79,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link prefetch={false} href="/dashboard/default">
-                <Command />
+                <Scale />
                 <span className="font-semibold text-base">{APP_CONFIG.name}</span>
               </Link>
             </SidebarMenuButton>
