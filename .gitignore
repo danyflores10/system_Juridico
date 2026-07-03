@@ -3,6 +3,7 @@ Frontend/node_modules/
 Frontend/.next/
 Frontend/out/
 Frontend/.env*
+!Frontend/.env.example
 Frontend/npm-debug.log*
 Frontend/.git.local.backup/
 
@@ -14,8 +15,11 @@ Backend/**/*.pyc
 Backend/db.sqlite3
 Backend/.env
 Backend/media/
+Backend/private_media/
+Backend/NORMATIVA EMITIDA/
 
 # General
+*.log
 .DS_Store
 Thumbs.db
 .vscode/

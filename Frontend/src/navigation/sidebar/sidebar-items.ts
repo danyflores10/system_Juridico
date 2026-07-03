@@ -3,12 +3,16 @@ import {
   Calendar,
   ChartBar,
   CheckSquare,
+  ClipboardCheck,
+  FileText,
   Fingerprint,
   Forklift,
   Gauge,
+  Globe2,
   GraduationCap,
   Kanban,
   LayoutDashboard,
+  LibraryBig,
   ListTodo,
   Lock,
   type LucideIcon,
@@ -69,6 +73,18 @@ export const sidebarItems: NavGroup[] = [
         title: "Resumen jurídico",
         url: "/dashboard/default",
         icon: LayoutDashboard,
+      },
+      {
+        id: "legal-documents",
+        title: "Documentos jurídicos",
+        url: "/dashboard/documentos",
+        icon: FileText,
+      },
+      {
+        id: "legal-review",
+        title: "Revisión jurídica",
+        url: "/dashboard/revision-juridica",
+        icon: ClipboardCheck,
       },
       {
         id: "crm",
@@ -189,6 +205,30 @@ export const sidebarItems: NavGroup[] = [
   },
   {
     id: 3,
+    label: "Configuración",
+    items: [
+      {
+        id: "web-sources",
+        title: "Cargador jurídico",
+        url: "/dashboard/fuentes",
+        icon: Globe2,
+      },
+      {
+        id: "legal-catalogs",
+        title: "Catálogos jurídicos",
+        icon: LibraryBig,
+        subItems: [
+          { id: "catalog-overview", title: "Administrar catálogos", url: "/dashboard/catalogos" },
+          { id: "catalog-matters", title: "Materias", url: "/dashboard/catalogos/materias" },
+          { id: "catalog-rule-types", title: "Tipos de norma", url: "/dashboard/catalogos/tipos-norma" },
+          { id: "catalog-effects", title: "Efectos normativos", url: "/dashboard/catalogos/efectos" },
+          { id: "catalog-entities", title: "Entidades emisoras", url: "/dashboard/catalogos/entidades" },
+        ],
+      },
+    ],
+  },
+  {
+    id: 4,
     label: "Vistas anteriores",
     items: [
       {
@@ -204,7 +244,7 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
   {
-    id: 4,
+    id: 5,
     label: "Otros",
     items: [
       {

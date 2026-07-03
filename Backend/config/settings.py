@@ -43,7 +43,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'catalogos',
+    'django_filters',
+    'drf_spectacular',
+    'apps.catalogos.apps.CatalogosConfig',
+    'apps.fuentes.apps.FuentesConfig',
+    'apps.normativa.apps.NormativaConfig',
 ]
 
 MIDDLEWARE = [
@@ -122,13 +126,103 @@ USE_I18N = True
 
 USE_TZ = True
 
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
+CELERY_RESULT_BACKEND = os.getenv(
+    'CELERY_RESULT_BACKEND',
+    'redis://127.0.0.1:6379/1',
+)
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = int(os.getenv('CELERY_TASK_TIME_LIMIT', '2100'))
+CELERY_TASK_SOFT_TIME_LIMIT = int(
+    os.getenv('CELERY_TASK_SOFT_TIME_LIMIT', '2000')
+)
+CELERY_TASK_ALWAYS_EAGER = (
+    os.getenv('CELERY_TASK_ALWAYS_EAGER', 'False').lower() == 'true'
+)
+CELERY_TIMEZONE = 'America/La_Paz'
+CELERY_BEAT_SCHEDULE = {
+    'revisar-fuentes-programadas': {
+        'task': 'fuentes.programar_descargas_pendientes',
+        'schedule': float(os.getenv('SOURCE_SCHEDULER_INTERVAL_SECONDS', '1800')),
+    },
+}
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
 
+MEDIA_ROOT = BASE_DIR / 'private_media'
+MAX_PDF_UPLOAD_SIZE = int(
+    os.getenv('MAX_PDF_UPLOAD_SIZE', str(100 * 1024 * 1024))
+)
+SOURCE_MAX_LISTING_BYTES = int(
+    os.getenv('SOURCE_MAX_LISTING_BYTES', str(5 * 1024 * 1024))
+)
+PDF_MIN_TEXT_CHARS_PER_PAGE = int(
+    os.getenv('PDF_MIN_TEXT_CHARS_PER_PAGE', '30')
+)
+PDF_SCANNED_IMAGE_COVERAGE = float(
+    os.getenv('PDF_SCANNED_IMAGE_COVERAGE', '0.80')
+)
+PDF_WORD_IMAGE_DPI = int(os.getenv('PDF_WORD_IMAGE_DPI', '300'))
+OCR_LANGUAGE = os.getenv('OCR_LANGUAGE', 'spa')
+OCRMYPDF_COMMAND = os.getenv('OCRMYPDF_COMMAND', 'ocrmypdf')
+OCR_PROCESS_TIMEOUT = int(os.getenv('OCR_PROCESS_TIMEOUT', '1800'))
+OCR_CONFIDENCE_DPI = int(os.getenv('OCR_CONFIDENCE_DPI', '150'))
+QUALITY_MIN_TEXT_CHARS = int(os.getenv('QUALITY_MIN_TEXT_CHARS', '200'))
+QUALITY_MIN_OCR_CONFIDENCE = float(
+    os.getenv('QUALITY_MIN_OCR_CONFIDENCE', '75')
+)
+QUALITY_MIN_EXTRACTION_CONFIDENCE = float(
+    os.getenv('QUALITY_MIN_EXTRACTION_CONFIDENCE', '70')
+)
+_final_normativa_root = os.getenv('FINAL_NORMATIVA_ROOT', '').strip()
+FINAL_NORMATIVA_ROOT = (
+    Path(_final_normativa_root)
+    if _final_normativa_root
+    else BASE_DIR / 'NORMATIVA EMITIDA'
+)
+FINAL_FILENAME_MAX_LENGTH = int(
+    os.getenv('FINAL_FILENAME_MAX_LENGTH', '230')
+)
+FINAL_PATH_MAX_LENGTH = int(
+    os.getenv('FINAL_PATH_MAX_LENGTH', '240')
+)
+FINAL_STORAGE_ROOT_LENGTH_BUDGET = int(
+    os.getenv('FINAL_STORAGE_ROOT_LENGTH_BUDGET', '100')
+)
+
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS': (
+        'rest_framework.pagination.PageNumberPagination'
+    ),
+    'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Sistema Consultor Jurídico API',
+    'VERSION': '1.0.0',
+    'ENUM_NAME_OVERRIDES': {
+        'DocumentoEstadoEnum': 'apps.normativa.models.Documento.Estado',
+        'EjecucionFuenteEstadoEnum': (
+            'apps.fuentes.models.EjecucionFuente.Estado'
+        ),
+    },
+}
+
+ALLOW_PRIVATE_SOURCE_URLS = (
+    os.getenv('ALLOW_PRIVATE_SOURCE_URLS', 'False').lower() == 'true'
+)
