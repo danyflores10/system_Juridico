@@ -15,6 +15,7 @@ import {
   Mail,
   MessageSquare,
   ReceiptText,
+  Scale,
   Server,
   ShoppingBag,
   SquareArrowUpRight,
@@ -69,6 +70,13 @@ export const sidebarItems: NavGroup[] = [
         title: "Resumen jurídico",
         url: "/dashboard/default",
         icon: LayoutDashboard,
+      },
+      {
+        id: "buscador",
+        title: "Buscador jurídico",
+        url: "/dashboard/buscador",
+        icon: Scale,
+        badge: "new",
       },
       {
         id: "crm",

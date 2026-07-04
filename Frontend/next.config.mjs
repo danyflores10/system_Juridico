@@ -8,6 +8,7 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  serverExternalPackages: ["pg", "pdf-parse", "pdfjs-dist", "mammoth"],
   reactCompiler: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
