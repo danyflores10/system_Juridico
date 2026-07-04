@@ -68,7 +68,7 @@ export function Pricing() {
             </span>
           </FadeUp>
           <FadeUp delay={0.1}>
-            <h2 className="lj-font-heading font-black text-5xl text-white uppercase">
+            <h2 className="lj-font-heading font-black text-3xl text-white uppercase sm:text-4xl md:text-5xl">
               Planes a la medida
               <br />
               <span className="text-[#d4af37]">de su necesidad</span>
@@ -117,7 +117,7 @@ export function Pricing() {
               {/* Precio */}
               <div className="mb-4 flex items-end gap-1">
                 <span
-                  className={`lj-font-heading font-black text-5xl leading-none ${
+                  className={`lj-font-heading font-black text-4xl leading-none sm:text-5xl ${
                     plan.highlight ? "text-[#081020]" : "text-white"
                   }`}
                 >

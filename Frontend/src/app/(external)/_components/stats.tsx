@@ -35,7 +35,7 @@ export function Stats() {
             </span>
           </FadeUp>
           <FadeUp delay={0.1}>
-            <h2 className="lj-font-heading font-black text-5xl text-white uppercase">
+            <h2 className="lj-font-heading font-black text-3xl text-white uppercase sm:text-4xl md:text-5xl">
               Resultados
               <br />
               <span className="text-[#d4af37]">que hablan por sí solos</span>
@@ -57,7 +57,7 @@ export function Stats() {
                 target={stat.value}
                 suffix={stat.suffix}
                 duration={2200}
-                className="lj-font-heading mb-2 block origin-left font-black text-5xl text-[#d4af37] leading-none transition-transform duration-300 group-hover:scale-105"
+                className="lj-font-heading mb-2 block origin-left font-black text-4xl text-[#d4af37] leading-none transition-transform duration-300 group-hover:scale-105 sm:text-5xl"
               />
               <p className="lj-font-heading mb-1 font-bold text-base text-white uppercase tracking-wide">
                 {stat.label}

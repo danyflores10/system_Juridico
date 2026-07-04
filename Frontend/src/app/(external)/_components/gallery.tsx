@@ -45,7 +45,7 @@ export function Gallery() {
             </span>
           </FadeUp>
           <FadeUp delay={0.1}>
-            <h2 className="lj-font-heading font-black text-5xl text-white uppercase">
+            <h2 className="lj-font-heading font-black text-3xl text-white uppercase sm:text-4xl md:text-5xl">
               Nuestras <span className="text-[#d4af37]">especialidades</span>
               <br />
               legales

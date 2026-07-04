@@ -49,7 +49,7 @@ export function Hero() {
             initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="lj-font-heading font-black text-7xl text-white uppercase leading-[0.95] tracking-tight"
+            className="lj-font-heading font-black text-4xl text-white uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl"
           >
             Protegemos
           </motion.h1>
@@ -61,7 +61,7 @@ export function Hero() {
             transition={{ duration: 0.8, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-wrap items-baseline gap-4"
           >
-            <h1 className="lj-font-heading font-black text-7xl text-[#d4af37] uppercase leading-[0.95] tracking-tight">
+            <h1 className="lj-font-heading font-black text-4xl text-[#d4af37] uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
               Sus derechos
             </h1>
           </motion.div>
@@ -71,7 +71,7 @@ export function Hero() {
             initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="lj-font-heading font-black text-7xl text-white uppercase leading-[0.95] tracking-tight"
+            className="lj-font-heading font-black text-4xl text-white uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl"
           >
             Con excelencia
           </motion.h1>
@@ -114,11 +114,13 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 1.05 }}
-          className="mt-16 flex items-center gap-12 border-white/10 border-t pt-8"
+          className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-6 border-white/10 border-t pt-8 sm:gap-x-12 md:mt-16"
         >
           {heroStats.map((stat) => (
             <div key={stat.label} className="flex flex-col">
-              <span className="lj-font-heading font-black text-3xl text-[#d4af37] leading-none">{stat.value}</span>
+              <span className="lj-font-heading font-black text-2xl text-[#d4af37] leading-none sm:text-3xl">
+                {stat.value}
+              </span>
               <span className="mt-1 text-white/50 text-xs uppercase tracking-wide">{stat.label}</span>
             </div>
           ))}
@@ -130,7 +132,7 @@ export function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.4 }}
-        className="absolute right-8 bottom-8 z-10 flex flex-col items-center gap-2 md:right-16"
+        className="absolute right-8 bottom-8 z-10 hidden flex-col items-center gap-2 md:right-16 md:flex"
       >
         <div className="h-16 w-px bg-linear-to-b from-transparent to-[#d4af37]/60" />
         <span className="origin-center translate-x-4 rotate-90 text-[10px] text-white/40 uppercase tracking-widest">

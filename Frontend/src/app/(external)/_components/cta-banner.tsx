@@ -34,7 +34,7 @@ export function CtaBanner() {
         </FadeUp>
 
         <FadeUp delay={0.1}>
-          <h2 className="lj-font-heading mx-auto mb-8 max-w-4xl font-black text-6xl text-white uppercase">
+          <h2 className="lj-font-heading mx-auto mb-8 max-w-4xl font-black text-3xl text-white uppercase sm:text-4xl md:text-6xl">
             Su tranquilidad legal
             <br />
             <span className="text-[#d4af37]">comienza hoy.</span>

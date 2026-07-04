@@ -48,16 +48,37 @@ html:has(.lj-landing)::-webkit-scrollbar-thumb {
 
 /* Ritmo vertical de las secciones */
 .lj-section {
-  padding-top: 7.5rem;
-  padding-bottom: 7.5rem;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+  .lj-section {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .lj-section {
+    padding-top: 7.5rem;
+    padding-bottom: 7.5rem;
+  }
 }
 
 /* Contenedor principal */
 .lj-container {
   max-width: 1440px;
   margin: 0 auto;
-  padding-left: 2rem;
-  padding-right: 2rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .lj-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
 
 @media (min-width: 768px) {

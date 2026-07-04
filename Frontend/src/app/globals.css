@@ -6,6 +6,12 @@
 @import "../styles/presets/brutalist.css";
 @import "../styles/presets/soft-pop.css";
 @import "../styles/presets/tangerine.css";
+@import "../styles/presets/legal-gold.css";
+@import "../styles/presets/emerald.css";
+@import "../styles/presets/burgundy.css";
+@import "../styles/presets/sapphire.css";
+@import "../styles/presets/midnight.css";
+@import "../styles/presets/glass.css";
 
 @custom-variant dark (&:is(.dark *));
 
