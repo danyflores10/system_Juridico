@@ -8,6 +8,7 @@ import { Hero } from "./_components/hero";
 import { Navbar } from "./_components/navbar";
 import { Partners } from "./_components/partners";
 import { Pricing } from "./_components/pricing";
+import { ScrollProgress } from "./_components/scroll-progress";
 import { Services } from "./_components/services";
 import { Stats } from "./_components/stats";
 import { Testimonials } from "./_components/testimonials";
@@ -16,6 +17,7 @@ import { WhatsappButton } from "./_components/whatsapp-button";
 export default function Home() {
   return (
     <main className="overflow-x-clip bg-[#081020]">
+      <ScrollProgress />
       <Navbar />
       <Hero />
       <About />
