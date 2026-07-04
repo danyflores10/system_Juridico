@@ -8,6 +8,18 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+<<<<<<< Updated upstream
+=======
+  serverExternalPackages: ["pg", "pdf-parse", "pdfjs-dist", "mammoth"],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
+>>>>>>> Stashed changes
   reactCompiler: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",

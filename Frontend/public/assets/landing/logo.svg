@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 72" fill="none" role="img" aria-label="Consultor Jurídico">
+  <g>
+    <!-- Balanza de la justicia -->
+    <circle cx="34" cy="9" r="3.5" fill="#e2c04d"/>
+    <rect x="32" y="12" width="4" height="42" rx="2" fill="#d4af37"/>
+    <rect x="10" y="16" width="48" height="3.5" rx="1.75" fill="#d4af37"/>
+    <!-- Cadenas izquierda -->
+    <path d="M14 20 L7 36 M14 20 L21 36" stroke="#d4af37" stroke-width="1.6" stroke-linecap="round"/>
+    <!-- Platillo izquierdo -->
+    <path d="M3 36 A11 11 0 0 0 25 36 Z" fill="#e2c04d"/>
+    <!-- Cadenas derecha -->
+    <path d="M54 20 L47 36 M54 20 L61 36" stroke="#d4af37" stroke-width="1.6" stroke-linecap="round"/>
+    <!-- Platillo derecho -->
+    <path d="M43 36 A11 11 0 0 0 65 36 Z" fill="#e2c04d"/>
+    <!-- Base -->
+    <rect x="22" y="54" width="24" height="4" rx="2" fill="#d4af37"/>
+    <rect x="18" y="60" width="32" height="4" rx="2" fill="#a8862a"/>
+  </g>
+  <g font-family="Georgia, 'Times New Roman', serif">
+    <text x="78" y="34" font-size="23" font-weight="700" letter-spacing="2.5" fill="#ffffff">CONSULTOR</text>
+    <text x="78" y="60" font-size="23" font-weight="700" letter-spacing="7.5" fill="#d4af37">JURÍDICO</text>
+  </g>
+</svg>
