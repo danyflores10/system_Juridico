@@ -1,0 +1,8 @@
+<header class="legal-page-header">
+  <div class="legal-page-header-inner">
+    <p class="legal-page-eyebrow">{% if eyebrow %}{{ eyebrow }}{% else %}Sistema Legislativo{% endif %}</p>
+    <h1>{{ title }}</h1>
+    {% if subtitle %}<p>{{ subtitle }}</p>{% endif %}
+  </div>
+  {% block page_header_actions %}{% endblock %}
+</header>

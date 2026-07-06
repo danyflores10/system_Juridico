@@ -1,0 +1,193 @@
+{% extends "leyes/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard de Análisis{% endblock %}
+{% block nav_active %}dashboard{% endblock %}
+{% block shell_class %}legal-shell-content--fluid{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'leyes/css/dashboard.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dash-cockpit" id="dash-cockpit">
+  <canvas class="dash-bg-canvas" id="dash-bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- Command bar -->
+  <header class="dash-command">
+    <div class="dash-command-left">
+      <div class="dash-live-pill"><span class="dash-live-dot"></span> Corpus en vivo</div>
+      <h1 class="dash-command-title">Centro de Inteligencia Legislativa</h1>
+      <p class="dash-command-sub" id="dash-timestamp">Sincronizado · {{ generado_en|default:"—" }}</p>
+    </div>
+    <div class="dash-command-right">
+      <div class="dash-search-wrap">
+        <input type="search" id="dash-search" class="dash-search" placeholder="Buscar ley, norma, palabra…" autocomplete="off">
+        <kbd class="dash-kbd">/</kbd>
+      </div>
+      <button class="dash-cmd-btn" id="btn-refresh-dash" type="button" title="Actualizar datos">
+        <span class="dash-cmd-icon">↻</span>
+      </button>
+      <button class="dash-cmd-btn dash-cmd-accent" id="btn-export-json" type="button" title="Exportar JSON">
+        <span class="dash-cmd-icon">⬇</span>
+      </button>
+      <a href="{% url 'panel' %}?etapa=2" class="dash-cmd-btn dash-cmd-primary">Procesar</a>
+    </div>
+  </header>
+
+  <!-- KPI orbit -->
+  <section class="dash-kpi-orbit" aria-label="Indicadores clave">
+    <div class="dash-kpi-ring" data-kpi="leyes">
+      <svg viewBox="0 0 100 100" class="dash-ring-svg"><circle cx="50" cy="50" r="42" class="dash-ring-bg"/><circle cx="50" cy="50" r="42" class="dash-ring-fill" style="--pct:75"/></svg>
+      <div class="dash-kpi-core"><span class="dash-kpi-num" id="kpi-leyes" data-target="{{ stats.leyes }}">0</span><span class="dash-kpi-lbl">Originales</span></div>
+    </div>
+    <div class="dash-kpi-ring warn" data-kpi="pendientes">
+      <svg viewBox="0 0 100 100" class="dash-ring-svg"><circle cx="50" cy="50" r="42" class="dash-ring-bg"/><circle cx="50" cy="50" r="42" class="dash-ring-fill" style="--pct:40"/></svg>
+      <div class="dash-kpi-core"><span class="dash-kpi-num" id="kpi-pendientes" data-target="{{ stats.mods_pendientes }}">0</span><span class="dash-kpi-lbl">Sin vincular</span></div>
+    </div>
+    <div class="dash-kpi-ring" data-kpi="vinculadas">
+      <div class="dash-kpi-core"><span class="dash-kpi-num" id="kpi-vinculadas" data-target="{{ stats.mods_vinculadas }}">0</span><span class="dash-kpi-lbl">Listas</span></div>
+    </div>
+    <div class="dash-kpi-ring accent" data-kpi="resultados">
+      <svg viewBox="0 0 100 100" class="dash-ring-svg"><circle cx="50" cy="50" r="42" class="dash-ring-bg"/><circle cx="50" cy="50" r="42" class="dash-ring-fill" style="--pct:90"/></svg>
+      <div class="dash-kpi-core"><span class="dash-kpi-num" id="kpi-resultados" data-target="{{ stats.resultados }}">0</span><span class="dash-kpi-lbl">Resultantes</span></div>
+    </div>
+    <div class="dash-kpi-ring">
+      <div class="dash-kpi-core"><span class="dash-kpi-num" id="kpi-procesadas" data-target="{{ stats.mods_procesadas }}">0</span><span class="dash-kpi-lbl">Procesadas</span></div>
+    </div>
+    <div class="dash-kpi-ring">
+      <div class="dash-kpi-core"><span class="dash-kpi-num" id="kpi-total-mods" data-target="{{ total_modificatorios }}">0</span><span class="dash-kpi-lbl">Modificatorios</span></div>
+    </div>
+  </section>
+
+  <!-- Law carousel -->
+  <section class="dash-law-strip-wrap">
+    <div class="dash-section-head">
+      <h2>Selector normativo</h2>
+      <span class="dash-filter-tag" id="dash-filter-label">Vista: corpus completo</span>
+    </div>
+    <div class="dash-law-strip" id="dash-law-strip" role="tablist">
+      <button type="button" class="dash-law-chip active" data-ley="all" role="tab" aria-selected="true">
+        <span class="chip-code">ALL</span>
+        <span class="chip-title">Todo el corpus</span>
+      </button>
+      {% for ley in leyes_stats %}
+      <button type="button" class="dash-law-chip" data-ley="{{ ley.codigo }}" role="tab"
+        data-mods="{{ ley.n_mods }}" data-res="{{ ley.n_resultados }}" data-titulo="{{ ley.titulo|escape }}">
+        <span class="chip-code">L {{ ley.codigo }}</span>
+        <span class="chip-title">{{ ley.titulo|truncatechars:38 }}</span>
+        <span class="chip-stats">{{ ley.n_mods }}↔{{ ley.n_resultados }}</span>
+      </button>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Tab nav -->
+  <nav class="dash-tabs" role="tablist">
+    <button type="button" class="dash-tab active" data-tab="radar" role="tab">Radar normativo</button>
+    <button type="button" class="dash-tab" data-tab="lexico" role="tab">Nube léxica</button>
+    <button type="button" class="dash-tab" data-tab="cronologia" role="tab">Línea temporal</button>
+    <button type="button" class="dash-tab" data-tab="alertas" role="tab">Alertas</button>
+  </nav>
+
+  <!-- Panels -->
+  <div class="dash-panels">
+
+    <!-- TAB: Radar -->
+    <section class="dash-panel-view active" id="tab-radar" role="tabpanel">
+      <div class="dash-grid-3">
+        <div class="dash-glass dash-radar-box">
+          <h3>Acciones detectadas</h3>
+          <div class="dash-chart-radar"><canvas id="chartRadar"></canvas></div>
+          <div class="dash-action-chips" id="action-chips"></div>
+        </div>
+        <div class="dash-glass">
+          <h3>Pulso de palabras clave</h3>
+          <div class="dash-keyword-grid" id="keyword-pulse"></div>
+        </div>
+        <div class="dash-glass">
+          <h3>Top términos</h3>
+          <div class="dash-top-words" id="top-words-bars"></div>
+        </div>
+      </div>
+      <div class="dash-glass dash-table-box">
+        <h3>Detalle de acciones normativas</h3>
+        <table class="dash-table-dark">
+          <thead><tr><th>Acción</th><th>Frecuencia</th><th>Impacto</th></tr></thead>
+          <tbody id="tabla-acciones-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB: Lexico -->
+    <section class="dash-panel-view" id="tab-lexico" role="tabpanel" hidden>
+      <div class="dash-grid-2">
+        <div class="dash-glass dash-cloud-box">
+          <h3>Nube legislativa interactiva</h3>
+          <p class="dash-hint">Clic en una palabra para resaltar · arrastra para explorar</p>
+          <canvas id="word-cloud-canvas" class="dash-word-cloud"></canvas>
+          <div class="dash-cloud-detail" id="cloud-detail">Pasa el cursor sobre una palabra</div>
+        </div>
+        <div class="dash-glass">
+          <h3>Frecuencia en modificatorios</h3>
+          <div class="dash-chart-wrap"><canvas id="chartPalabrasMods"></canvas></div>
+          <h3 style="margin-top:1.5rem">Frecuencia en resultantes</h3>
+          <div class="dash-chart-wrap"><canvas id="chartPalabrasRes"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: Cronologia -->
+    <section class="dash-panel-view" id="tab-cronologia" role="tabpanel" hidden>
+      <div class="dash-glass">
+        <h3>Línea temporal de modificatorias</h3>
+        <div class="dash-timeline-scroll" id="timeline-scroll">
+          <div class="dash-timeline-track" id="timeline-track"></div>
+        </div>
+        <div class="dash-timeline-detail" id="timeline-detail">
+          <p>Selecciona un nodo en la línea temporal</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: Alertas -->
+    <section class="dash-panel-view" id="tab-alertas" role="tabpanel" hidden>
+      <div class="dash-grid-2">
+        <div class="dash-glass">
+          <h3>Centro de alertas <span class="dash-badge-live" id="alert-count">{{ alertas|length }}</span></h3>
+          <div class="dash-alert-feed" id="alertas-panel"></div>
+        </div>
+        <div class="dash-glass">
+          <h3>Resumen por ley</h3>
+          <div class="dash-ley-grid" id="ley-summary-grid"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Ticker -->
+  <footer class="dash-ticker" aria-live="polite">
+    <div class="dash-ticker-track" id="dash-ticker"></div>
+  </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ acciones|json_script:"data-acciones" }}
+{{ palabras_mods|json_script:"data-palabras-mods" }}
+{{ palabras_res|json_script:"data-palabras-res" }}
+{{ metadatos_por_ley|json_script:"data-metadatos" }}
+{{ leyes_stats|json_script:"data-leyes-stats" }}
+{{ cronologia|json_script:"data-cronologia" }}
+{{ alertas|json_script:"data-alertas" }}
+{{ palabras_clave_obligatorias|json_script:"data-keywords" }}
+{{ top_palabras_general|json_script:"data-top-words" }}
+<script>
+  window.DASHBOARD_CONFIG = {
+    apiUrl: "{% url 'api_dashboard_data' %}",
+    panelUrl: "{% url 'panel' %}",
+  };
+</script>
+<script src="{% static 'leyes/js/dashboard.js' %}"></script>
+{% endblock %}

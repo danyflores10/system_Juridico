@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro · Sistema Legislativo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/leyes/css/legal-system.css">
+  <script src="/static/leyes/js/auth-mock.js"></script>
+</head>
+<body class="legal-auth">
+  <div class="legal-auth-bg"><div class="legal-auth-bg-pattern"></div></div>
+  <a href="/static/leyes/auth/login.html" class="legal-back-home">← Iniciar sesión</a>
+  <div class="legal-auth-container" style="max-width:520px">
+    <div class="legal-auth-card legal-auth-card--wide">
+      <div class="legal-auth-logo">
+        <span class="mark">§</span>
+        <h1>Solicitar acceso</h1>
+        <p>Registro institucional (demo)</p>
+      </div>
+      <div id="register-error" class="legal-auth-error" hidden role="alert"></div>
+      <form id="register-form" class="legal-auth-form" novalidate>
+        <div class="legal-form-grid">
+          <div class="legal-form-group"><label>Nombre</label><input class="legal-input" type="text"></div>
+          <div class="legal-form-group"><label>Apellido</label><input class="legal-input" type="text"></div>
+          <div class="legal-form-group legal-form-group--full"><label>Correo</label><input class="legal-input" type="email"></div>
+        </div>
+        <button type="submit" class="legal-btn-primary" data-label="Enviar solicitud">Enviar solicitud</button>
+      </form>
+      <p class="legal-auth-footer-text">¿Ya tiene acceso? <a href="/static/leyes/auth/login.html">Ingresar</a></p>
+    </div>
+  </div>
+  <script src="/static/leyes/js/auth.js"></script>
+</body>
+</html>

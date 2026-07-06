@@ -1,0 +1,500 @@
+{% extends "leyes/base.html" %}
+{% load static %}
+
+{% block title %}Pre-Documento — Ley {{ resultado.ley_original.codigo_ley }} v{{ resultado.version }}{% endblock %}
+{% block nav_active %}etapa3{% endblock %}
+
+{% block page_header %}
+{% include "leyes/components/page_header.html" with title="Pre-Documento Normativo" subtitle="Expediente normativo consolidado para revisión previa." eyebrow="Ley "|add:resultado.ley_original.codigo_ley %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Layout general ── */
+  .pd-wrapper {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem 3rem;
+  }
+
+  /* ── Encabezado del pre-documento ── */
+  .pd-hero {
+    background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .pd-hero::before {
+    content: "§";
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 8rem;
+    font-family: var(--font-serif);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .pd-hero-eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.65;
+    margin: 0 0 0.4rem;
+  }
+  .pd-hero-title {
+    font-family: var(--font-serif);
+    font-size: 1.55rem;
+    font-weight: 600;
+    margin: 0 0 0.6rem;
+    line-height: 1.3;
+  }
+  .pd-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-top: 1rem;
+    font-size: 0.83rem;
+    opacity: 0.85;
+  }
+  .pd-hero-meta span { display: flex; align-items: center; gap: 0.35rem; }
+
+  /* ── Contador de cambios ── */
+  .pd-counter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .pd-counter {
+    background: #fff;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+    border-top: 3px solid var(--navy-600);
+    text-align: center;
+  }
+  .pd-counter.tipo-modifica  { border-top-color: #2563eb; }
+  .pd-counter.tipo-sustituye { border-top-color: #7c3aed; }
+  .pd-counter.tipo-incorpora { border-top-color: #059669; }
+  .pd-counter.tipo-elimina   { border-top-color: #dc2626; }
+  .pd-counter.tipo-abroga    { border-top-color: #b45309; }
+  .pd-counter.tipo-otro      { border-top-color: var(--slate-400); }
+  .pd-counter-val  { font-size: 2rem; font-weight: 700; color: var(--navy-800); line-height: 1; }
+  .pd-counter-lbl  { font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--slate-600); margin-top: 0.3rem; }
+
+  /* ── Lista de cambios ── */
+  .pd-cambios-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .pd-cambios-header h3 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--navy-900); }
+
+  .pd-filtros { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .pd-filtro-btn {
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid var(--slate-200);
+    background: #fff;
+    font-size: 0.78rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--slate-600);
+    transition: all 0.15s;
+  }
+  .pd-filtro-btn:hover, .pd-filtro-btn.activo {
+    background: var(--navy-700);
+    border-color: var(--navy-700);
+    color: #fff;
+  }
+
+  /* ── Tarjeta de cambio ── */
+  .pd-cambio {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+    overflow: hidden;
+    border-left: 4px solid var(--slate-200);
+    transition: box-shadow 0.15s;
+  }
+  .pd-cambio:hover { box-shadow: 0 4px 20px rgba(15,28,46,0.1); }
+  .pd-cambio[data-tipo*="MODIFICA"]  { border-left-color: #2563eb; }
+  .pd-cambio[data-tipo*="SUSTITUYE"] { border-left-color: #7c3aed; }
+  .pd-cambio[data-tipo*="INCORPORA"] { border-left-color: #059669; }
+  .pd-cambio[data-tipo*="ELIMINA"]   { border-left-color: #dc2626; }
+  .pd-cambio[data-tipo*="ABROGA"],
+  .pd-cambio[data-tipo*="DEROGA"]    { border-left-color: #b45309; }
+
+  .pd-cambio-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    gap: 1rem;
+  }
+  .pd-cambio-head:hover { background: var(--slate-50); }
+
+  .pd-tipo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.65rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .pd-tipo-badge.modifica  { background: #dbeafe; color: #1e40af; }
+  .pd-tipo-badge.sustituye { background: #ede9fe; color: #5b21b6; }
+  .pd-tipo-badge.incorpora { background: #d1fae5; color: #065f46; }
+  .pd-tipo-badge.elimina   { background: #fee2e2; color: #991b1b; }
+  .pd-tipo-badge.abroga    { background: #fef3c7; color: #92400e; }
+  .pd-tipo-badge.otro      { background: var(--slate-100); color: var(--slate-600); }
+
+  .pd-cambio-desc {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--slate-800);
+    line-height: 1.4;
+  }
+  .pd-articulo {
+    font-size: 0.78rem;
+    color: var(--slate-400);
+    font-style: italic;
+    flex-shrink: 0;
+  }
+  .pd-chevron {
+    color: var(--slate-400);
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .pd-cambio.abierto .pd-chevron { transform: rotate(180deg); }
+
+  .pd-cambio-body {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid var(--slate-100);
+  }
+  .pd-cambio.abierto .pd-cambio-body { display: block; }
+
+  .pd-extracto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+  @media (max-width: 650px) { .pd-extracto-grid { grid-template-columns: 1fr; } }
+
+  .pd-extracto {
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    font-size: 0.83rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .pd-extracto-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .pd-extracto.quitado { background: #fff5f5; border: 1px solid #fecaca; color: #7f1d1d; }
+  .pd-extracto.quitado .pd-extracto-label { color: #b91c1c; }
+  .pd-extracto.agregado { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
+  .pd-extracto.agregado .pd-extracto-label { color: #15803d; }
+  .pd-extracto.neutro { background: var(--slate-50); border: 1px solid var(--slate-200); color: var(--slate-600); grid-column: 1 / -1; }
+
+  /* ── Sin cambios ── */
+  .pd-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    color: var(--slate-400);
+  }
+  .pd-empty p { margin: 0.5rem 0; font-size: 0.95rem; }
+  .pd-empty a { color: var(--navy-600); font-weight: 500; }
+
+  /* ── Botones acción ── */
+  .pd-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .pd-print-btn {
+    background: var(--slate-100);
+    border: 1px solid var(--slate-200);
+    color: var(--slate-700);
+    padding: 0.5rem 1.1rem;
+    border-radius: 6px;
+    font-size: 0.84rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .pd-print-btn:hover { background: var(--slate-200); }
+
+  @media print {
+    .app-header, .app-footer, .pd-actions, .pd-filtros, .pd-chevron { display: none !important; }
+    .pd-cambio-body { display: block !important; }
+    .pd-cambio { box-shadow: none; border: 1px solid #ccc; margin-bottom: 0.75rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pd-wrapper">
+
+  <!-- Hero -->
+  <div class="pd-hero">
+    <p class="pd-hero-eyebrow">📄 Pre-Documento de Modificaciones</p>
+    <h2 class="pd-hero-title">
+      Ley {{ resultado.ley_original.codigo_ley }} — {{ resultado.ley_original.titulo|truncatechars:90 }}
+    </h2>
+    <div class="pd-hero-meta">
+      <span>📌 Versión v{{ resultado.version }}</span>
+      <span>🗓 {{ resultado.fecha_modificacion|date:"d/m/Y H:i" }}</span>
+      {% if preinforme.archivo_modificatorio %}
+      <span>📂 Modificatorio: {{ preinforme.archivo_modificatorio }}</span>
+      {% endif %}
+      {% if preinforme.total_cambios %}
+      <span>⚡ {{ preinforme.total_cambios }} cambio(s) registrado(s)</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if preinforme.resumen_ejecutivo %}
+  <div class="pd-counter-row" style="margin-bottom:1.5rem">
+    <div class="pd-counter tipo-modifica">
+      <div class="pd-counter-val">{{ preinforme.resumen_ejecutivo.articulos_modificados }}</div>
+      <div class="pd-counter-lbl">⚠️ Modificados</div>
+    </div>
+    <div class="pd-counter tipo-incorpora">
+      <div class="pd-counter-val">{{ preinforme.resumen_ejecutivo.articulos_incorporados }}</div>
+      <div class="pd-counter-lbl">➕ Incorporados</div>
+    </div>
+    <div class="pd-counter tipo-elimina">
+      <div class="pd-counter-val">{{ preinforme.resumen_ejecutivo.articulos_derogados }}</div>
+      <div class="pd-counter-lbl">❌ Derogados</div>
+    </div>
+    <div class="pd-counter">
+      <div class="pd-counter-val">{{ preinforme.resumen_ejecutivo.palabras_cambiadas_aprox }}</div>
+      <div class="pd-counter-lbl">Palabras cambiadas</div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if preinforme.errores_detectados or preinforme.advertencias %}
+  <div style="margin-bottom:1.5rem">
+    {% for err in preinforme.errores_detectados %}
+    <div class="pd-cambio" style="border-left-color:#dc2626;padding:0.75rem 1rem;margin-bottom:0.5rem">
+      🔴 {{ err.mensaje }}
+    </div>
+    {% endfor %}
+    {% for adv in preinforme.advertencias %}
+    <div class="pd-cambio" style="border-left-color:#f59e0b;padding:0.75rem 1rem;margin-bottom:0.5rem">
+      {{ adv.icono|default:"🟡" }} {{ adv.mensaje }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Acciones -->
+  <div class="pd-actions">
+    <a href="{% url 'detalle_resultado' resultado.pk %}" class="btn btn-secondary">← Ver Texto Resultante</a>
+    <a href="{% url 'panel' %}?etapa=3" class="btn btn-secondary">← Volver al Panel</a>
+    <button class="pd-print-btn" onclick="window.print()">🖨 Imprimir / Exportar PDF</button>
+    <a href="{% url 'api_predocumento' resultado.pk %}" target="_blank" class="pd-print-btn">{ } JSON Raw</a>
+  </div>
+
+  {% if preinforme.entradas %}
+
+  <!-- Contadores por tipo -->
+  {% with entradas=preinforme.entradas %}
+  <div class="pd-counter-row" id="contadores-tipo">
+    <div class="pd-counter">
+      <div class="pd-counter-val">{{ preinforme.total_cambios }}</div>
+      <div class="pd-counter-lbl">Total Cambios</div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="pd-cambios-header">
+    <h3>Registro Detallado de Modificaciones</h3>
+    <div class="pd-filtros">
+      <button class="pd-filtro-btn activo" data-filtro="todos">Todos</button>
+      <button class="pd-filtro-btn" data-filtro="MODIFICA">Modifica</button>
+      <button class="pd-filtro-btn" data-filtro="SUSTITUYE">Sustituye</button>
+      <button class="pd-filtro-btn" data-filtro="INCORPORA">Incorpora</button>
+      <button class="pd-filtro-btn" data-filtro="ELIMINA">Elimina</button>
+      <button class="pd-filtro-btn" data-filtro="ABROGA">Abroga/Deroga</button>
+    </div>
+  </div>
+
+  <!-- Tarjetas de cambios -->
+  <div id="lista-cambios">
+    {% for entrada in entradas %}
+    {% with tipo=entrada.tipo_accion|upper %}
+    <div class="pd-cambio"
+         data-tipo="{{ tipo }}"
+         onclick="toggleCambio(this)">
+
+      <div class="pd-cambio-head">
+        <!-- Badge de tipo -->
+        {% if "MODIFICA" in tipo %}
+          <span class="pd-tipo-badge modifica">✏️ SE MODIFICA</span>
+        {% elif "SUSTITUYE" in tipo %}
+          <span class="pd-tipo-badge sustituye">🔄 SE SUSTITUYE</span>
+        {% elif "INCORPORA" in tipo or "ADICIONA" in tipo %}
+          <span class="pd-tipo-badge incorpora">➕ SE INCORPORA</span>
+        {% elif "ELIMINA" in tipo or "SUPRIME" in tipo %}
+          <span class="pd-tipo-badge elimina">🗑 SE ELIMINA</span>
+        {% elif "ABROGA" in tipo or "DEROGA" in tipo %}
+          <span class="pd-tipo-badge abroga">⛔ ABROGA/DEROGA</span>
+        {% else %}
+          <span class="pd-tipo-badge otro">📌 {{ entrada.tipo_accion|truncatechars:20 }}</span>
+        {% endif %}
+
+        <span class="pd-cambio-desc">{{ entrada.descripcion }}</span>
+
+        {% if entrada.articulo_referencia %}
+        <span class="pd-articulo">{{ entrada.articulo_referencia }}</span>
+        {% endif %}
+
+        <span class="pd-chevron">▼</span>
+      </div>
+
+      <div class="pd-cambio-body">
+        {% if entrada.extracto_quitado or entrada.extracto_agregado %}
+        <div class="pd-extracto-grid">
+          {% if entrada.extracto_quitado %}
+          <div>
+            <div class="pd-extracto-label" style="color:#b91c1c">— Texto anterior</div>
+            <div class="pd-extracto quitado">{{ entrada.extracto_quitado }}</div>
+          </div>
+          {% endif %}
+          {% if entrada.extracto_agregado %}
+          <div>
+            <div class="pd-extracto-label" style="color:#15803d">+ Texto nuevo / incorporado</div>
+            <div class="pd-extracto agregado">{{ entrada.extracto_agregado }}</div>
+          </div>
+          {% endif %}
+          {% if not entrada.extracto_quitado and entrada.extracto_agregado %}
+          <div></div>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="pd-extracto-grid">
+          <div class="pd-extracto neutro">{{ entrada.descripcion }}</div>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% endwith %}
+
+  {% else %}
+  <!-- Sin pre-informe -->
+  <div class="pd-empty">
+    <p style="font-size:2.5rem; margin-bottom:0.5rem">📭</p>
+    <p><strong>No se generó pre-informe para esta versión.</strong></p>
+    <p>El motor no registró cambios detallados. Esto ocurre cuando la modificación no contiene
+       las palabras clave estándar (SE MODIFICA, SE INCORPORA, etc.).</p>
+    <p style="margin-top:1.5rem">
+      <a href="{% url 'detalle_resultado' resultado.pk %}">Ver el texto resultante completo →</a>
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Expandir/colapsar tarjeta
+function toggleCambio(el) {
+  el.classList.toggle('abierto');
+}
+
+// Filtros
+document.querySelectorAll('.pd-filtro-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pd-filtro-btn').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+    const filtro = btn.dataset.filtro;
+    document.querySelectorAll('.pd-cambio').forEach(card => {
+      if (filtro === 'todos') {
+        card.style.display = '';
+      } else {
+        const tipo = (card.dataset.tipo || '').toUpperCase();
+        card.style.display = tipo.includes(filtro.toUpperCase()) ? '' : 'none';
+      }
+    });
+    actualizarContadores(filtro);
+  });
+});
+
+// Contadores dinámicos por tipo
+function actualizarContadores(filtroActivo) {
+  const cards = document.querySelectorAll('.pd-cambio');
+  const visibles = filtroActivo === 'todos'
+    ? Array.from(cards)
+    : Array.from(cards).filter(c => (c.dataset.tipo||'').toUpperCase().includes(filtroActivo.toUpperCase()));
+
+  const grupos = {};
+  visibles.forEach(c => {
+    const tipo = c.dataset.tipo || 'OTRO';
+    grupos[tipo] = (grupos[tipo] || 0) + 1;
+  });
+
+  const cont = document.getElementById('contadores-tipo');
+  if (!cont) return;
+
+  const tipoMap = {
+    'MODIFICA':  { cls: 'modifica',  lbl: 'SE MODIFICA' },
+    'SUSTITUYE': { cls: 'sustituye', lbl: 'SE SUSTITUYE' },
+    'INCORPORA': { cls: 'incorpora', lbl: 'SE INCORPORA' },
+    'ELIMINA':   { cls: 'elimina',   lbl: 'SE ELIMINA' },
+    'ABROGA':    { cls: 'abroga',    lbl: 'ABROGA/DEROGA' },
+    'DEROGA':    { cls: 'abroga',    lbl: 'ABROGA/DEROGA' },
+  };
+
+  const total = visibles.length;
+  let html = `<div class="pd-counter"><div class="pd-counter-val">${total}</div><div class="pd-counter-lbl">${filtroActivo === 'todos' ? 'Total Cambios' : 'Filtrados'}</div></div>`;
+
+  Object.entries(grupos).forEach(([tipo, n]) => {
+    let cls = 'otro', lbl = tipo;
+    for (const [key, val] of Object.entries(tipoMap)) {
+      if (tipo.includes(key)) { cls = val.cls; lbl = val.lbl; break; }
+    }
+    html += `<div class="pd-counter tipo-${cls}"><div class="pd-counter-val">${n}</div><div class="pd-counter-lbl">${lbl}</div></div>`;
+  });
+
+  cont.innerHTML = html;
+}
+
+// Inicializar contadores al cargar
+document.addEventListener('DOMContentLoaded', () => actualizarContadores('todos'));
+</script>
+{% endblock %}

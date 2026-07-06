@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Panel Jurídico{% endblock %} · Sistema Legislativo</title>
+  <script src="{% static 'leyes/js/auth-mock.js' %}"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'leyes/css/legal-system.css' %}">
+  <link rel="stylesheet" href="{% static 'leyes/css/panel.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="legal-app {% block body_class %}{% endblock %}">
+  {% csrf_token %}
+
+  <header class="legal-navbar" role="banner">
+    <div class="legal-navbar-inner">
+      <button type="button" class="legal-sidebar-toggle" id="legal-sidebar-toggle" aria-label="Alternar menú" aria-expanded="true">☰</button>
+
+      <a href="{% url 'panel' %}" class="legal-brand">
+        <span class="legal-brand-mark" aria-hidden="true">§</span>
+        <div class="legal-brand-text">
+          <span class="legal-brand-eyebrow">Sistema Legal-Tech</span>
+          <span class="legal-brand-title">Gestión Legislativa</span>
+        </div>
+      </a>
+
+      <div class="legal-nav-actions">
+        <!-- Usuario logueado (mock) — rellenado por auth.js -->
+      </div>
+    </div>
+  </header>
+
+  <div class="legal-app-body">
+    <div id="legal-sidebar-mount" data-active="{% block nav_active %}{% endblock %}"></div>
+
+    <div class="legal-shell-main">
+      {% block page_header %}{% endblock %}
+      <div class="legal-shell-content {% block shell_class %}{% endblock %}">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <footer class="legal-footer" role="contentinfo">
+    <span>Integridad normativa · Trazabilidad por versión · Confidencialidad jurídica</span>
+  </footer>
+
+  <script src="{% static 'leyes/js/legal-shell.js' %}"></script>
+  <script src="{% static 'leyes/js/auth.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

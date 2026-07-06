@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Información Personal · Sistema Legislativo</title>
+  <script src="/static/leyes/js/auth-mock.js"></script>
+  <script>
+    (function () {
+      if (!window.LegalAuth || !window.LegalAuth.isAuthenticated()) {
+        var next = encodeURIComponent(window.location.pathname);
+        window.location.replace("/static/leyes/auth/login.html?next=" + next);
+      }
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/leyes/css/legal-system.css">
+  <link rel="stylesheet" href="/static/leyes/css/profile.css">
+</head>
+<body class="legal-app legal-page-perfil">
+  <header class="legal-navbar" role="banner">
+    <div class="legal-navbar-inner">
+      <button type="button" class="legal-sidebar-toggle" id="legal-sidebar-toggle" aria-label="Alternar menú" aria-expanded="true">☰</button>
+      <a href="/" class="legal-brand">
+        <span class="legal-brand-mark" aria-hidden="true">§</span>
+        <div class="legal-brand-text">
+          <span class="legal-brand-eyebrow">Sistema Legal-Tech</span>
+          <span class="legal-brand-title">Gestión Legislativa</span>
+        </div>
+      </a>
+      <div class="legal-nav-actions"></div>
+    </div>
+  </header>
+
+  <div class="legal-app-body">
+    <div id="legal-sidebar-mount" data-active="perfil"></div>
+
+    <div class="legal-shell-main">
+      <header class="legal-page-header">
+        <div class="legal-page-header-inner">
+          <p class="legal-page-eyebrow">Cuenta de usuario</p>
+          <h1>Información Personal</h1>
+          <p>Consulte y actualice su perfil institucional. Los cambios de foto se guardan localmente en esta demo.</p>
+        </div>
+      </header>
+
+      <div class="legal-shell-content">
+        <div class="legal-content-card profile-layout">
+          <article class="profile-card" aria-labelledby="profile-card-title">
+            <div class="profile-card-visual">
+              <div class="profile-avatar-wrap">
+                <div class="profile-avatar" id="profile-avatar" role="img" aria-label="Foto de perfil">
+                  <span class="profile-avatar-initials">—</span>
+                </div>
+                <button type="button" class="profile-avatar-edit" id="profile-photo-btn" title="Editar o subir foto" aria-label="Editar foto de perfil">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                </button>
+                <input type="file" id="profile-photo-input" accept="image/*" hidden>
+              </div>
+              <p class="profile-avatar-hint">Haga clic en el avatar o en el ícono para cambiar la foto</p>
+            </div>
+
+            <div class="profile-card-body">
+              <h2 id="profile-card-title" class="profile-card-title">Ficha del profesional</h2>
+
+              <div class="profile-cargo-highlight">
+                <span class="profile-cargo-label">Cargo</span>
+                <span class="profile-cargo-badge" id="profile-cargo-badge">—</span>
+              </div>
+
+              <dl class="profile-dl">
+                <div class="profile-dl-row">
+                  <dt>Nombre</dt>
+                  <dd id="profile-firstname">—</dd>
+                </div>
+                <div class="profile-dl-row">
+                  <dt>Apellido</dt>
+                  <dd id="profile-lastname">—</dd>
+                </div>
+                <div class="profile-dl-row">
+                  <dt>Cargo</dt>
+                  <dd id="profile-cargo" class="profile-cargo-text">—</dd>
+                </div>
+                <div class="profile-dl-row">
+                  <dt>Correo institucional</dt>
+                  <dd id="profile-email">—</dd>
+                </div>
+                <div class="profile-dl-row">
+                  <dt>Último acceso</dt>
+                  <dd id="profile-session">—</dd>
+                </div>
+              </dl>
+            </div>
+          </article>
+
+          <aside class="profile-aside">
+            <div class="profile-aside-card">
+              <h3>Nota de privacidad</h3>
+              <p>En esta versión demo, la foto de perfil y la sesión se almacenan únicamente en su navegador. No se envían datos al servidor.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="legal-footer" role="contentinfo">
+    <span>Integridad normativa · Trazabilidad por versión · Confidencialidad jurídica</span>
+  </footer>
+
+  <script src="/static/leyes/js/legal-shell.js"></script>
+  <script src="/static/leyes/js/auth.js"></script>
+  <script src="/static/leyes/js/profile.js"></script>
+</body>
+</html>

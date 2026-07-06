@@ -1,0 +1,313 @@
+{% extends "leyes/base.html" %}
+{% load static %}
+
+{% block title %}Panel de Control{% endblock %}
+{% block nav_active %}{% if etapa == "2" %}etapa2{% elif etapa == "3" %}etapa3{% elif etapa == "dashboard" %}dashboard{% else %}etapa1{% endif %}{% endblock %}
+
+{% block page_header %}
+{% include "leyes/components/page_header.html" with title="Panel de Control Legislativo" subtitle="Gestione el ciclo completo: reconocimiento, vinculación y verificación normativa." eyebrow="Flujo operativo" %}
+{% endblock %}
+
+{% block content %}
+<div class="legal-content-card legal-content-card--flush">
+<div class="stats-bar">
+  <div class="stat-card"><strong>{{ stats.leyes }}</strong><span>Leyes reconocidas</span></div>
+  <div class="stat-card"><strong id="stat-vinculadas">{{ stats.mods_vinculadas }}</strong><span>Listas para motor</span></div>
+  <div class="stat-card"><strong id="stat-pendientes">{{ stats.mods_pendientes }}</strong><span>Sin vincular</span></div>
+  <div class="stat-card"><strong>{{ stats.resultados }}</strong><span>Resultados generados</span></div>
+</div>
+
+<div id="toast-container" class="toast-container" aria-live="polite"></div>
+<div id="alert-global" class="alert" role="status"></div>
+
+{% if etapa == "1" %}
+<section class="etapa" id="etapa-1">
+  <header class="etapa-header">
+    <p class="etapa-numero">Etapa I</p>
+    <h2 class="etapa-titulo">Carga y Reconocimiento Previo</h2>
+    <p class="etapa-desc">Cargue los archivos base de las normas. El sistema extraerá el código y el título antes de cualquier procesamiento.</p>
+  </header>
+
+  <div class="card">
+    <div class="card-head">Carga de Leyes Originales</div>
+    <div class="card-body">
+      <div class="dropzone" id="dropzone-leyes" tabindex="0">
+        <div class="dropzone-icon">&#128193;</div>
+        <p class="dropzone-title">Arrastre archivos aquí o haga clic para seleccionar</p>
+        <p class="dropzone-hint">Formatos: .txt, .md, .html, .pdf, .docx — Extracción automática de texto</p>
+        <input type="file" id="input-leyes" multiple accept=".txt,.md,.html,.htm,.pdf,.docx">
+        <div class="file-list" id="lista-leyes"></div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="btn-subir-leyes">Registrar y Reconocer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Leyes Reconocidas en el Sistema</div>
+    <div class="card-body table-wrap">
+      {% if leyes %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Código de Ley</th>
+            <th>Título Detectado</th>
+            <th>Estado</th>
+            <th>Archivo</th>
+            <th>Fecha de Carga</th>
+            <th>Gestión</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ley in leyes %}
+          <tr>
+            <td><strong>{{ ley.codigo_ley }}</strong></td>
+            <td>{{ ley.titulo|truncatechars:80 }}</td>
+            <td>
+              <span class="badge badge-{{ ley.estado_proceso }}">
+                {{ ley.get_estado_proceso_display }}
+              </span>
+            </td>
+            <td>{{ ley.archivo_origen|default:"—" }}</td>
+            <td>{{ ley.fecha_carga|date:"d/m/Y H:i" }}</td>
+            <td>
+              <button type="button" class="btn-icon btn-desactivar" data-tipo="ley" data-id="{{ ley.id }}" title="Desactivar ley">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                Desactivar
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="empty-state">No hay leyes registradas. Cargue archivos en el área superior.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if leyes_inactivas %}
+  <div class="card card-muted">
+    <div class="card-head">Leyes Inactivas o Abrogadas (archivo)</div>
+    <div class="card-body table-wrap">
+      <table class="data-table table-muted">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Título</th>
+            <th>Estado</th>
+            <th>Archivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ley in leyes_inactivas %}
+          <tr class="row-inactiva">
+            <td>{{ ley.codigo_ley }}</td>
+            <td>{{ ley.titulo|truncatechars:60 }}</td>
+            <td><span class="badge badge-inactivo">{{ ley.get_estado_display }}</span></td>
+            <td>{{ ley.archivo_origen|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if etapa == "2" %}
+<section class="etapa" id="etapa-2">
+  <header class="etapa-header">
+    <p class="etapa-numero">Etapa II</p>
+    <h2 class="etapa-titulo">Vinculación de Modificatorios</h2>
+    <p class="etapa-desc">Cargue los documentos modificatorios. El sistema los cruzará automáticamente con las leyes reconocidas mediante el código numérico.</p>
+  </header>
+
+  <div class="card">
+    <div class="card-head">Carga de Documentos Modificatorios</div>
+    <div class="card-body">
+      <div class="dropzone" id="dropzone-mods">
+        <div class="dropzone-icon">&#128196;</div>
+        <p class="dropzone-title">Documentos de reforma, decreto o modificación</p>
+        <p class="dropzone-hint">.txt, .pdf, .docx — vinculación automática por código de ley</p>
+        <input type="file" id="input-mods" multiple accept=".txt,.md,.html,.htm,.pdf,.docx">
+        <div class="file-list" id="lista-mods"></div>
+      </div>
+      <div class="actions actions-motor">
+        <button type="button" class="btn btn-primary" id="btn-subir-mods">Cargar y Vincular</button>
+        <button type="button" class="btn btn-motor" id="btn-procesar" title="Ejecuta el motor sobre modificatorios vinculados">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Ejecutar Motor de Cambios
+        </button>
+        <a href="{% url 'panel' %}?etapa=3" class="btn btn-secondary">Ir a Verificación →</a>
+      </div>
+      <p class="hint-motor">Solo se procesan documentos en estado «Vinculada — Lista para procesar».</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Tabla de Vinculación</div>
+    <div class="card-body table-wrap">
+      <table class="data-table" id="tabla-modificaciones" {% if not modificaciones %}style="display:none"{% endif %}>
+        <thead>
+          <tr>
+            <th>Archivo Modificatorio</th>
+            <th>Código Detectado</th>
+            <th>Ley Vinculada</th>
+            <th>Palabras Clave</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-modificaciones">
+          {% for mod in modificaciones %}
+          <tr data-mod-id="{{ mod.id }}" data-estado="{{ mod.estado_vinculacion }}">
+            <td>{{ mod.archivo_origen }}</td>
+            <td class="cell-codigo">{{ mod.codigo_ley_detectado|default:"—" }}</td>
+            <td class="cell-ley">
+              {% if mod.ley_original %}
+                Ley {{ mod.ley_original.codigo_ley }}
+              {% else %}
+                <span class="badge badge-warn">Ley no vinculada</span>
+              {% endif %}
+            </td>
+            <td>{{ mod.palabras_clave_detectadas|default:"—" }}</td>
+            <td class="cell-estado">
+              <span class="badge badge-estado badge-{{ mod.estado_vinculacion }}">
+                {{ mod.get_estado_vinculacion_display }}
+              </span>
+            </td>
+            <td class="cell-acciones-vinculo">
+              {% if not mod.procesado and not mod.ley_original %}
+              <div class="vinculo-actions" data-mod-id="{{ mod.id }}">
+                <button type="button" class="btn btn-secondary btn-sm btn-reintentar" data-id="{{ mod.id }}">Reintentar Vinculación</button>
+                <div class="vinculo-manual hidden">
+                  <select class="select-ley-manual" aria-label="Seleccionar ley">
+                    <option value="">— Seleccione ley original —</option>
+                    {% for ley in leyes_para_select %}
+                    <option value="{{ ley.id }}">{{ ley.label }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="button" class="btn btn-primary btn-sm btn-confirmar-vinculo" data-id="{{ mod.id }}">Confirmar</button>
+                  <button type="button" class="btn btn-secondary btn-sm btn-cancelar-vinculo">Cancelar</button>
+                </div>
+                <button type="button" class="btn-icon btn-asignar-manual" data-id="{{ mod.id }}" title="Asignar manualmente">Asignar ▾</button>
+              </div>
+              {% elif mod.ley_original and not mod.procesado %}
+              <span class="text-muted-sm">Lista para motor</span>
+              {% else %}
+              <span class="text-muted-sm">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="empty-state" id="empty-mods" {% if modificaciones %}style="display:none"{% endif %}>No hay modificatorios cargados.</p>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if etapa == "3" %}
+<section class="etapa" id="etapa-3">
+  <header class="etapa-header">
+    <p class="etapa-numero">Etapa III</p>
+    <h2 class="etapa-titulo">Verificación y Editor en Línea</h2>
+    <p class="etapa-desc">Revise los resultados finales, realice correcciones de última hora y guarde la versión definitiva en base de datos.</p>
+  </header>
+
+  <div class="card">
+    <div class="card-head">Resultados Finales Generados</div>
+    <div class="card-body table-wrap">
+      {% if resultados %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Título</th>
+            <th>Versión</th>
+            <th>Fecha</th>
+            <th>Auditoría</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for res in resultados %}
+          <tr>
+            <td><strong>{{ res.ley_original.codigo_ley }}</strong></td>
+            <td>{{ res.ley_original.titulo|truncatechars:60 }}</td>
+            <td>v{{ res.version }}</td>
+            <td>{{ res.fecha_modificacion|date:"d/m/Y H:i" }}</td>
+            <td>
+              {% if res.preinforme.total_cambios %}
+              <span class="badge badge-pendiente" title="Pre-informe disponible">{{ res.preinforme.total_cambios }} cambio(s)</span>
+              {% elif res.preinforme.entradas %}
+              <span class="badge badge-pendiente">{{ res.preinforme.entradas|length }} cambio(s)</span>
+              {% else %}
+              <span class="text-muted-sm">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if res.es_version_final %}
+                <span class="badge badge-modificada">Versión Final</span>
+              {% else %}
+                <span class="badge badge-pendiente">Borrador</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="cell-actions">
+                <a href="{% url 'detalle_resultado' res.pk %}" class="btn btn-secondary btn-sm">📝 Editor</a>
+                <a href="{% url 'predocumento' res.pk %}" class="btn btn-secondary btn-sm" title="Ver pre-documento de cambios">📄 Pre-doc</a>
+                <button type="button" class="btn-icon btn-descargar" data-id="{{ res.pk }}" title="Descargar documento">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  DOCX
+                </button>
+                <button type="button" class="btn-icon btn-descargar-pdf" data-id="{{ res.pk }}" title="Descargar PDF">
+                  PDF
+                </button>
+                <button type="button" class="btn-icon btn-desactivar" data-tipo="resultado" data-id="{{ res.pk }}" title="Desactivar resultado">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="empty-state">No hay resultados. Procese modificaciones en la Etapa II.</p>
+      <div class="actions" style="justify-content:center">
+        <a href="{% url 'panel' %}?etapa=2" class="btn btn-primary">Ir a Vinculación</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ leyes_para_select|json_script:"leyes-disponibles" }}
+<script>
+  window.LEYES_DISPONIBLES = JSON.parse(document.getElementById("leyes-disponibles").textContent);
+  window.LEY_URLS = {
+    cargarLeyes: "{% url 'cargar_leyes' %}",
+    cargarMods: "{% url 'cargar_modificaciones' %}",
+    procesar: "{% url 'procesar_modificaciones' %}",
+    estadoPanel: "{% url 'api_estado_panel' %}",
+    listarLeyes: "{% url 'api_listar_leyes' %}",
+    reintentarVinculo: "{% url 'reintentar_vinculacion' 0 %}".replace("/0/", "/"),
+    vincularManual: "{% url 'vincular_manual' 0 %}".replace("/0/", "/"),
+    desactivarLey: "{% url 'desactivar_ley' 0 %}".replace("/0/", "/"),
+    desactivarResultado: "{% url 'desactivar_resultado' 0 %}".replace("/0/", "/"),
+    descargar: "{% url 'descargar_resultado' 0 %}".replace("/0/", "/"),
+  };
+  window.PANEL_ETAPA = "{{ etapa }}";
+</script>
+<script src="{% static 'leyes/js/panel.js' %}"></script>
+{% endblock %}

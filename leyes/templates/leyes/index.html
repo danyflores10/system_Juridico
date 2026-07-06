@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modificador de Leyes</title>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --panel: #fff;
+      --border: #d8dee9;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: linear-gradient(135deg, #1e3a5f, #2563eb);
+      color: #fff;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    header h1 { margin: 0; font-size: 1.35rem; font-weight: 600; }
+    .toolbar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    select, button {
+      font: inherit;
+      padding: 0.45rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.primary:hover { background: var(--accent-hover); }
+    button.secondary {
+      background: #fff;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .status {
+      padding: 0.5rem 1.5rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+      min-height: 2rem;
+    }
+    .status.ok { color: #059669; }
+    .status.err { color: #dc2626; }
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 1rem 1.5rem 1.5rem;
+      min-height: calc(100vh - 140px);
+    }
+    @media (max-width: 900px) {
+      .panels { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .panel-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+    }
+    .panel-body { flex: 1; min-height: 400px; }
+    #panel-izq {
+      padding: 1rem;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      background: #fafbfc;
+    }
+    #editor { height: 100%; min-height: 400px; }
+    .ql-container { font-size: 0.95rem; min-height: 360px; }
+    .asoc-list {
+      padding: 0 1.5rem 1rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .asoc-list span {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin: 0.15rem;
+    }
+  </style>
+</head>
+<body>
+  {% csrf_token %}
+  <header>
+    <h1>Modificador de Leyes</h1>
+    <div class="toolbar">
+      <label>
+        Ley:
+        <select id="sel-ley" onchange="recargarVista()">
+          {% for l in leyes %}
+          <option value="{{ l.nombre }}" {% if l.nombre == ley_sel %}selected{% endif %}>{{ l.nombre }}</option>
+          {% empty %}
+          <option value="">— sin archivos —</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Panel izq.:
+        <select id="sel-panel" onchange="recargarVista()">
+          <option value="ley" {% if tipo_panel == "ley" %}selected{% endif %}>Texto original</option>
+          <option value="mod" {% if tipo_panel == "mod" %}selected{% endif %}>Instrucción de cambio</option>
+        </select>
+      </label>
+      <label>
+        Modificación:
+        <select id="sel-mod" onchange="recargarVista()">
+          {% for m in modificaciones %}
+          <option value="{{ m.nombre }}" {% if m.nombre == mod_sel %}selected{% endif %}>{{ m.nombre }}</option>
+          {% empty %}
+          <option value="">— sin archivos —</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Resultado:
+        <select id="sel-res" onchange="recargarVista()">
+          {% for r in resultados %}
+          <option value="{{ r.nombre }}" {% if r.nombre == res_sel %}selected{% endif %}>{{ r.nombre }}</option>
+          {% empty %}
+          <option value="">— pendiente —</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="button" class="primary" id="btn-procesar">Procesar Modificaciones</button>
+      <button type="button" class="secondary" id="btn-guardar">Guardar documento</button>
+    </div>
+  </header>
+
+  <div class="status" id="status-msg"></div>
+
+  {% if asociaciones %}
+  <div class="asoc-list">
+    Asociaciones detectadas:
+    {% for a in asociaciones %}
+    <span>{{ a.modificacion }} → {{ a.ley }} ({{ a.metodo }})</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="panels">
+    <section class="panel">
+      <div class="panel-header">
+        <span id="titulo-izq">{% if tipo_panel == "mod" %}Instrucción de cambio{% else %}Texto original de la ley{% endif %}</span>
+      </div>
+      <div class="panel-body">
+        <pre id="panel-izq">{{ texto_izq }}</pre>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <span>Resultado final (editable)</span>
+      </div>
+      <div class="panel-body">
+        <div id="editor"></div>
+      </div>
+    </section>
+  </div>
+
+  {{ texto_der|json_script:"texto-resultado" }}
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+  <script>
+    const textoInicial = JSON.parse(document.getElementById("texto-resultado").textContent);
+    const quill = new Quill("#editor", {
+      theme: "snow",
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, 3, false] }],
+          ["bold", "italic", "underline"],
+          [{ list: "ordered" }, { list: "bullet" }],
+          ["clean"],
+        ],
+      },
+    });
+
+    if (textoInicial) {
+      quill.setText(textoInicial);
+    }
+
+    function getCookie(name) {
+      const v = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
+      return v ? v.pop() : "";
+    }
+
+    function recargarVista() {
+      const ley = document.getElementById("sel-ley").value;
+      const mod = document.getElementById("sel-mod").value;
+      const panel = document.getElementById("sel-panel").value;
+      const res = document.getElementById("sel-res").value;
+      const params = new URLSearchParams({ ley, mod, panel });
+      if (res) params.set("resultado", res);
+      window.location = "?" + params.toString();
+    }
+
+    function setStatus(msg, ok) {
+      const el = document.getElementById("status-msg");
+      el.textContent = msg;
+      el.className = "status " + (ok ? "ok" : "err");
+    }
+
+    document.getElementById("btn-procesar").addEventListener("click", async () => {
+      const btn = document.getElementById("btn-procesar");
+      btn.disabled = true;
+      setStatus("Procesando modificaciones...", true);
+      try {
+        const res = await fetch("{% url 'procesar' %}", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await res.json();
+        if (data.ok) {
+          setStatus(data.mensaje + (data.archivos.length ? ": " + data.archivos.join(", ") : ""), true);
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          setStatus(data.mensaje || "Error al procesar", false);
+        }
+      } catch (e) {
+        setStatus("Error de red: " + e.message, false);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById("btn-guardar").addEventListener("click", async () => {
+      const ley = document.getElementById("sel-ley").value;
+      let nombre = document.getElementById("sel-res").value;
+      if (!nombre && ley) {
+        const ext = ley.includes(".") ? ley.substring(ley.lastIndexOf(".")) : ".txt";
+        const stem = ley.includes(".") ? ley.substring(0, ley.lastIndexOf(".")) : ley;
+        nombre = stem + "_modificada" + ext;
+      }
+      const contenido = quill.getText();
+      try {
+        const res = await fetch("{% url 'guardar' %}", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ nombre, contenido }),
+        });
+        const data = await res.json();
+        setStatus(data.mensaje, data.ok);
+        if (data.ok) setTimeout(() => window.location.reload(), 600);
+      } catch (e) {
+        setStatus("Error al guardar: " + e.message, false);
+      }
+    });
+  </script>
+</body>
+</html>

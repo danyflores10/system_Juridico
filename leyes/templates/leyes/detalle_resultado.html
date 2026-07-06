@@ -1,0 +1,136 @@
+{% extends "leyes/base.html" %}
+{% load static %}
+
+{% block title %}Ley {{ resultado.ley_original.codigo_ley }} v{{ resultado.version }}{% endblock %}
+{% block nav_active %}etapa3{% endblock %}
+
+{% block page_header %}
+{% include "leyes/components/page_header.html" with title="Editor de Resultado" subtitle="Edición y validación del texto resultante." eyebrow="Verificación normativa" %}
+{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div id="alert-global" class="alert" role="status"></div>
+
+<div class="editor-layout">
+  <aside class="meta-panel">
+    <h2>Expediente Normativo</h2>
+    <dl class="meta-dl">
+      <dt>Código de Ley</dt>
+      <dd>{{ resultado.ley_original.codigo_ley }}</dd>
+      <dt>Título</dt>
+      <dd>{{ resultado.ley_original.titulo }}</dd>
+      <dt>Versión</dt>
+      <dd>v{{ resultado.version }}</dd>
+      <dt>Última modificación</dt>
+      <dd>{{ resultado.fecha_modificacion|date:"d/m/Y H:i" }}</dd>
+      <dt>Estado</dt>
+      <dd>
+        {% if resultado.es_version_final %}
+          <span class="badge badge-modificada">Versión Final</span>
+        {% else %}
+          <span class="badge badge-pendiente">Borrador — editable</span>
+        {% endif %}
+      </dd>
+      <dt>Ley original</dt>
+      <dd>{{ resultado.ley_original.estado|title }}</dd>
+    </dl>
+    <div class="actions" style="margin-top:1.5rem; flex-direction:column">
+      <a href="{% url 'panel' %}?etapa=3" class="btn btn-secondary" style="justify-content:center">← Volver al listado</a>
+      <a href="{% url 'predocumento' resultado.pk %}" class="btn btn-primary" style="justify-content:center; margin-top:0.5rem">📄 Ver Pre-documento</a>
+    </div>
+  </aside>
+
+  <section class="editor-panel">
+    {% with pi=resultado.preinforme %}
+    {% if pi.entradas %}
+    <div class="preinforme-acordeon" id="preinforme-acordeon">
+      <button type="button" class="preinforme-cabecera" id="btn-toggle-preinforme" aria-expanded="true">
+        <span class="preinforme-titulo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Pre-informe de Modificación
+        </span>
+        <span class="preinforme-badge">{{ pi.total_cambios|default:pi.entradas|length }} cambio(s)</span>
+        <span class="preinforme-chevron" aria-hidden="true">▼</span>
+      </button>
+      <div class="preinforme-panel abierto" id="preinforme-panel">
+        <div class="preinforme-meta">
+          <div class="preinforme-meta-item">
+            <span class="label">Ley afectada</span>
+            <strong>Ley {{ pi.ley_codigo|default:resultado.ley_original.codigo_ley }}</strong>
+            <span class="sub">{{ pi.ley_titulo|default:resultado.ley_original.titulo }}</span>
+          </div>
+          {% if pi.archivo_modificatorio %}
+          <div class="preinforme-meta-item">
+            <span class="label">Archivo modificatorio</span>
+            <strong>{{ pi.archivo_modificatorio }}</strong>
+          </div>
+          {% endif %}
+        </div>
+        <ol class="preinforme-lista">
+          {% for entrada in pi.entradas %}
+          <li class="preinforme-entrada">
+            <div class="entrada-cabecera">
+              <span class="badge badge-accion">{{ entrada.tipo_accion }}</span>
+              {% if entrada.articulo_referencia %}
+              <span class="entrada-articulo">{{ entrada.articulo_referencia }}</span>
+              {% endif %}
+            </div>
+            <p class="entrada-descripcion">{{ entrada.descripcion }}</p>
+            {% if entrada.extracto_quitado %}
+            <div class="extracto extracto-quitado">
+              <span class="extracto-label">Texto eliminado / sustituido</span>
+              <blockquote>{{ entrada.extracto_quitado }}</blockquote>
+            </div>
+            {% endif %}
+            {% if entrada.extracto_agregado %}
+            <div class="extracto extracto-agregado">
+              <span class="extracto-label">Texto incorporado</span>
+              <blockquote>{{ entrada.extracto_agregado }}</blockquote>
+            </div>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="editor-panel-head">
+      <h2>Texto consolidado — verificación y corrección</h2>
+      <div class="editor-actions">
+        <button type="button" class="btn btn-primary" id="btn-guardar-final">
+          Guardar Versión Final
+        </button>
+        <button type="button" class="btn btn-secondary" id="btn-descargar-docx" title="Guarda en BD y descarga Word">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar DOCX
+        </button>
+        <button type="button" class="btn btn-secondary" id="btn-descargar-pdf">
+          Descargar PDF
+        </button>
+        <button type="button" class="btn-icon btn-desactivar-editor" data-id="{{ resultado.pk }}" title="Desactivar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="editor-container" class="editor-ley-html"></div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ resultado.contenido_final|json_script:"contenido-inicial" }}
+<script>
+  window.GUARDAR_URL = "{% url 'guardar_version_final' resultado.pk %}";
+  window.DESCARGAR_URL = "{% url 'descargar_resultado' resultado.pk %}";
+  window.DESACTIVAR_URL = "{% url 'desactivar_resultado' resultado.pk %}";
+  window.PANEL_URL = "{% url 'panel' %}?etapa=3";
+</script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<script src="{% static 'leyes/js/editor.js' %}"></script>
+{% endblock %}

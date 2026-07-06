@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión · Sistema Legislativo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/leyes/css/legal-system.css">
+  <script src="/static/leyes/js/auth-mock.js"></script>
+</head>
+<body class="legal-auth">
+  <div class="legal-auth-bg">
+    <div class="legal-auth-bg-pattern"></div>
+    <div class="legal-auth-scales" aria-hidden="true">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 20 L100 90 M60 90 L140 90 M60 90 L45 130 M140 90 L155 130"/>
+        <circle cx="75" cy="115" r="12"/><circle cx="125" cy="115" r="12"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="legal-auth-container">
+    <div class="legal-auth-card">
+      <div class="legal-auth-logo">
+        <span class="mark" aria-hidden="true">§</span>
+        <h1>Acceso al sistema</h1>
+        <p>Plataforma de análisis y gestión normativa</p>
+      </div>
+
+      <div class="legal-demo-hint">
+        <p class="legal-demo-title">Cuentas de demostración</p>
+        <div class="legal-demo-chips">
+          <button type="button" class="legal-demo-account" data-user="Elias Cordero">Elias Cordero</button>
+          <button type="button" class="legal-demo-account" data-user="Guillermo Gutierrez">Guillermo Gutierrez</button>
+        </div>
+        <p class="legal-demo-pwd">Contraseña: <strong>123456</strong> · Cargos: Asistente Legal / G2</p>
+      </div>
+
+      <div id="login-error" class="legal-auth-error" hidden role="alert"></div>
+
+      <form id="login-form" class="legal-auth-form" action="#" novalidate>
+        <div class="legal-form-group">
+          <label for="login-user">Usuario</label>
+          <div class="legal-input-wrap">
+            <input type="text" id="login-user" name="username" class="legal-input"
+              placeholder="Elias Cordero" autocomplete="username" required>
+            <span class="legal-input-icon" aria-hidden="true">👤</span>
+          </div>
+        </div>
+
+        <div class="legal-form-group">
+          <label for="login-password">Contraseña</label>
+          <div class="legal-input-wrap">
+            <input type="password" id="login-password" name="password" class="legal-input"
+              placeholder="••••••" autocomplete="current-password" required>
+            <button type="button" class="legal-toggle-pwd" id="toggle-login-pwd">Mostrar</button>
+          </div>
+        </div>
+
+        <div class="legal-form-row">
+          <label class="legal-checkbox">
+            <input type="checkbox" name="remember" checked> Recordarme
+          </label>
+          <a href="#" class="legal-link" onclick="return false">¿Olvidé mi contraseña?</a>
+        </div>
+
+        <button type="submit" class="legal-btn-primary" data-label="Ingresar">Ingresar</button>
+      </form>
+
+      <div class="legal-auth-divider">o</div>
+
+      <p class="legal-auth-footer-text">
+        <a href="/">← Ir al sistema legislativo sin iniciar sesión</a>
+      </p>
+      <p class="legal-auth-footer-text" style="margin-top:0.75rem">
+        ¿Necesita registrarse?
+        <a href="/static/leyes/auth/register.html">Solicitar acceso</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="/static/leyes/js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+django>=5.0
+PyMuPDF
+python-docx
+beautifulsoup4
+reportlab
+pypdf

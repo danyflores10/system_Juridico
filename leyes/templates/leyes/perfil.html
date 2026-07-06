@@ -1,0 +1,79 @@
+{% extends "leyes/base.html" %}
+{% load static %}
+
+{% block title %}Información Personal{% endblock %}
+{% block body_class %}legal-page-perfil{% endblock %}
+{% block nav_active %}perfil{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'leyes/css/profile.css' %}">
+{% endblock %}
+
+{% block page_header %}
+{% include "leyes/components/page_header.html" with title="Información Personal" subtitle="Consulte y actualice su perfil institucional. Los cambios de foto se guardan localmente en esta demo." eyebrow="Cuenta de usuario" %}
+{% endblock %}
+
+{% block content %}
+<div class="legal-content-card profile-layout">
+  <article class="profile-card" aria-labelledby="profile-card-title">
+    <div class="profile-card-visual">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="profile-avatar" role="img" aria-label="Foto de perfil">
+          <span class="profile-avatar-initials">—</span>
+        </div>
+        <button type="button" class="profile-avatar-edit" id="profile-photo-btn" title="Editar o subir foto" aria-label="Editar foto de perfil">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </button>
+        <input type="file" id="profile-photo-input" accept="image/*" hidden>
+      </div>
+      <p class="profile-avatar-hint">Haga clic en el avatar o en el ícono para cambiar la foto</p>
+    </div>
+
+    <div class="profile-card-body">
+      <h2 id="profile-card-title" class="profile-card-title">Ficha del profesional</h2>
+
+      <div class="profile-cargo-highlight">
+        <span class="profile-cargo-label">Cargo</span>
+        <span class="profile-cargo-badge" id="profile-cargo-badge">—</span>
+      </div>
+
+      <dl class="profile-dl">
+        <div class="profile-dl-row">
+          <dt>Nombre</dt>
+          <dd id="profile-firstname">—</dd>
+        </div>
+        <div class="profile-dl-row">
+          <dt>Apellido</dt>
+          <dd id="profile-lastname">—</dd>
+        </div>
+        <div class="profile-dl-row">
+          <dt>Cargo</dt>
+          <dd id="profile-cargo" class="profile-cargo-text">—</dd>
+        </div>
+        <div class="profile-dl-row">
+          <dt>Correo institucional</dt>
+          <dd id="profile-email">—</dd>
+        </div>
+        <div class="profile-dl-row">
+          <dt>Último acceso</dt>
+          <dd id="profile-session">—</dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <aside class="profile-aside">
+    <div class="profile-aside-card">
+      <h3>Nota de privacidad</h3>
+      <p>En esta versión demo, la foto de perfil y la sesión se almacenan únicamente en su navegador. No se envían datos al servidor.</p>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'leyes/js/profile.js' %}"></script>
+{% endblock %}
