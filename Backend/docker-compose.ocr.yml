@@ -1,0 +1,45 @@
+services:
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  ocr_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.ocr
+    restart: unless-stopped
+    init: true
+    ipc: host
+    env_file:
+      - .env
+    environment:
+      DB_HOST: host.docker.internal
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      - redis
+    volumes:
+      - ./private_media:/app/private_media
+      - ./NORMATIVA EMITIDA:/app/NORMATIVA EMITIDA
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.ocr
+    restart: unless-stopped
+    command: ["celery", "-A", "config", "beat", "--loglevel=INFO", "--schedule=/tmp/celerybeat-schedule"]
+    env_file:
+      - .env
+    environment:
+      DB_HOST: host.docker.internal
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      - redis
+
+volumes:
+  redis_data:

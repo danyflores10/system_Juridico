@@ -1,0 +1,8 @@
+venv/
+private_media/
+NORMATIVA EMITIDA/
+__pycache__/
+*.py[cod]
+.env
+.git/
+.vscode/
