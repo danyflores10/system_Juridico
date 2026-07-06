@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { CircleUser, CreditCard, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,6 +27,11 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    router.replace("/auth/v2/login");
+  };
 
   return (
     <SidebarMenu>
@@ -80,7 +87,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Cerrar sesión
             </DropdownMenuItem>

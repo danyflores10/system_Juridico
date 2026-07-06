@@ -97,7 +97,10 @@ export function LoginForm() {
           )}
         />
       </FieldGroup>
-      <Button className="w-full" type="submit">
+      <Button
+        className="w-full transition-all duration-300 hover:shadow-lg active:scale-[0.98]"
+        type="submit"
+      >
         Ingresar
       </Button>
     </form>

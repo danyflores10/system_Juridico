@@ -99,7 +99,7 @@ export function LayoutControls() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size="icon">
+        <Button size="icon" variant="ghost" className="text-muted-foreground" aria-label="Ajustes de apariencia">
           <Settings />
         </Button>
       </PopoverTrigger>

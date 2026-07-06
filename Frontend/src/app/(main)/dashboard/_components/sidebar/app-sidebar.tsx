@@ -20,6 +20,7 @@ import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
 import { NavMain } from "./nav-main";
+import { NavProfile } from "./nav-profile";
 import { NavUser } from "./nav-user";
 import { SidebarSupportCard } from "./sidebar-support-card";
 
@@ -85,6 +86,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <NavProfile user={rootUser} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={sidebarItems} />

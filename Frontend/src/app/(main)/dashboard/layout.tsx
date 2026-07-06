@@ -12,8 +12,8 @@ import { getPreference } from "@/server/server-actions";
 
 import { AccountSwitcher } from "./_components/sidebar/account-switcher";
 import { LayoutControls } from "./_components/sidebar/layout-controls";
+import { FullscreenToggle, MessagesMenu, NotificationsMenu } from "./_components/sidebar/nav-header-actions";
 import { SearchDialog } from "./_components/sidebar/search-dialog";
-import { ThemeSwitcher } from "./_components/sidebar/theme-switcher";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
   const cookieStore = await cookies();
@@ -59,9 +59,11 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
               />
               <SearchDialog />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <MessagesMenu />
+              <NotificationsMenu />
+              <FullscreenToggle />
               <LayoutControls />
-              <ThemeSwitcher />
               <AccountSwitcher users={users} />
             </div>
           </div>
