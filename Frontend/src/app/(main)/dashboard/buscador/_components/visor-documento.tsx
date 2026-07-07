@@ -2,7 +2,17 @@
 
 import * as React from "react";
 
-import { ChevronLeft, ChevronRight, Download, FileX2, ImageDown, ShieldAlert, ZoomIn, ZoomOut } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  FileX2,
+  ImageDown,
+  Search,
+  ShieldAlert,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import type { PDFDocumentLoadingTask, PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 import { toast } from "sonner";
 
@@ -12,8 +22,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { nombreTipoNorma } from "@/data/biblioteca-catalogo";
+import { buscarCoincidencias, type RangoCoincidencia } from "@/lib/texto-busqueda";
 import { cn } from "@/lib/utils";
 
+import { BarraBusquedaVisor, MINIMO_CONSULTA } from "./barra-busqueda-visor";
 import { canvasDesdeTexto, componerCaptura, descargarCanvas } from "./marca-agua";
 import type { PlanAcceso, ResultadoNormativa } from "./tipos";
 
@@ -26,6 +38,129 @@ interface PropiedadesVisor {
 
 type EstadoVisor = "cargando" | "listo" | "error";
 
+type ModuloPdfjs = typeof import("pdfjs-dist");
+
+/** Fragmento de texto de una página del PDF, con su posición dentro de ella. */
+interface ItemTextoPdf {
+  str: string;
+  transform: number[];
+  width: number;
+  hasEOL?: boolean;
+}
+
+/** Texto extraído de una página, listo para buscar y ubicar coincidencias. */
+interface PaginaIndexada {
+  items: ItemTextoPdf[];
+  transformVista: number[];
+}
+
+/** Rectángulo de resaltado en coordenadas de la página a escala 1. */
+interface RectResaltado {
+  x: number;
+  y: number;
+  ancho: number;
+  alto: number;
+}
+
+/** Una coincidencia de la búsqueda interna: página y rectángulos a pintar. */
+interface CoincidenciaPdf {
+  pagina: number;
+  rects: RectResaltado[];
+}
+
+/**
+ * Localiza la consulta en el texto de cada página y calcula los rectángulos
+ * de resaltado (a escala 1; el visor los multiplica por el zoom actual).
+ * La comparación ignora mayúsculas, tildes y saltos de línea.
+ */
+function calcularCoincidenciasPdf(paginas: PaginaIndexada[], consulta: string, pdfjs: ModuloPdfjs): CoincidenciaPdf[] {
+  const resultado: CoincidenciaPdf[] = [];
+
+  paginas.forEach((paginaIndexada, indice) => {
+    const numeroPagina = indice + 1;
+
+    // Texto corrido de la página con el tramo que ocupa cada fragmento.
+    let cadena = "";
+    const tramos: { inicio: number; fin: number; item: ItemTextoPdf }[] = [];
+    for (const item of paginaIndexada.items) {
+      tramos.push({ inicio: cadena.length, fin: cadena.length + item.str.length, item });
+      cadena += item.str + (item.hasEOL ? "\n" : "");
+    }
+
+    for (const rango of buscarCoincidencias(cadena, consulta)) {
+      const rects: RectResaltado[] = [];
+
+      for (const tramo of tramos) {
+        if (tramo.fin <= rango.inicio || tramo.inicio >= rango.fin) continue;
+
+        const longitud = tramo.item.str.length;
+        if (longitud === 0 || tramo.item.width <= 0) continue;
+
+        const desde = Math.max(0, rango.inicio - tramo.inicio) / longitud;
+        const hasta = Math.min(longitud, rango.fin - tramo.inicio) / longitud;
+
+        const transformada = pdfjs.Util.transform(paginaIndexada.transformVista, tramo.item.transform);
+        const alto = Math.hypot(transformada[2], transformada[3]);
+        if (alto <= 0) continue;
+
+        rects.push({
+          x: transformada[4] + desde * tramo.item.width,
+          y: transformada[5] - alto,
+          ancho: (hasta - desde) * tramo.item.width,
+          alto,
+        });
+      }
+
+      if (rects.length > 0) resultado.push({ pagina: numeroPagina, rects });
+    }
+  });
+
+  return resultado;
+}
+
+/** Texto plano con las coincidencias envueltas en <mark>; la actual resalta en naranja. */
+function TextoResaltado({
+  texto,
+  rangos,
+  indiceActual,
+  refActual,
+}: {
+  texto: string;
+  rangos: RangoCoincidencia[];
+  indiceActual: number;
+  refActual: (nodo: HTMLElement | null) => void;
+}) {
+  if (rangos.length === 0) return <>{texto}</>;
+
+  const nodos: React.ReactNode[] = [];
+  let cursor = 0;
+
+  rangos.forEach((rango, indice) => {
+    if (rango.inicio > cursor) {
+      nodos.push(<React.Fragment key={`texto-${cursor}`}>{texto.slice(cursor, rango.inicio)}</React.Fragment>);
+    }
+    const actual = indice === indiceActual;
+    nodos.push(
+      <mark
+        key={`marca-${rango.inicio}`}
+        ref={actual ? refActual : undefined}
+        className={cn(
+          "rounded-[2px] px-px text-foreground",
+          actual
+            ? "bg-orange-300 ring-2 ring-orange-400/70 dark:bg-orange-400/90 dark:text-background"
+            : "bg-yellow-200 dark:bg-yellow-300/80 dark:text-background",
+        )}
+      >
+        {texto.slice(rango.inicio, rango.fin)}
+      </mark>,
+    );
+    cursor = rango.fin;
+  });
+
+  nodos.push(<React.Fragment key={`texto-${cursor}`}>{texto.slice(cursor)}</React.Fragment>);
+  return <>{nodos}</>;
+}
+
 export function VisorDocumento({ documento, plan, abierto, onOpenChange }: PropiedadesVisor) {
   const [estado, setEstado] = React.useState<EstadoVisor>("cargando");
   const [mensajeError, setMensajeError] = React.useState("");
@@ -34,13 +169,28 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
   const [escala, setEscala] = React.useState(1.2);
   const [texto, setTexto] = React.useState<string | null>(null);
 
+  // Búsqueda interna del documento (Ctrl+F).
+  const [busquedaVisible, setBusquedaVisible] = React.useState(false);
+  const [consulta, setConsulta] = React.useState("");
+  const [indexando, setIndexando] = React.useState(false);
+  const [coincidenciasPdf, setCoincidenciasPdf] = React.useState<CoincidenciaPdf[]>([]);
+  const [rangosTexto, setRangosTexto] = React.useState<RangoCoincidencia[]>([]);
+  const [indiceActual, setIndiceActual] = React.useState(0);
+
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const pdfRef = React.useRef<PDFDocumentProxy | null>(null);
+  const pdfjsRef = React.useRef<ModuloPdfjs | null>(null);
   const tareaCargaRef = React.useRef<PDFDocumentLoadingTask | null>(null);
   const tareaRenderRef = React.useRef<RenderTask | null>(null);
+  const indicePdfRef = React.useRef<Promise<PaginaIndexada[]> | null>(null);
+  const inputBusquedaRef = React.useRef<HTMLInputElement | null>(null);
+
+  const busquedaVisibleRef = React.useRef(false);
+  busquedaVisibleRef.current = busquedaVisible;
 
   const esPdf = documento?.extension === "pdf";
   const restringido = documento?.carpeta === "ACTUALIZADA";
+  const totalCoincidencias = esPdf ? coincidenciasPdf.length : rangosTexto.length;
 
   // Carga del documento al abrir el visor.
   React.useEffect(() => {
@@ -52,6 +202,12 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
     setTexto(null);
     setPagina(1);
     setTotalPaginas(0);
+    setBusquedaVisible(false);
+    setConsulta("");
+    setCoincidenciasPdf([]);
+    setRangosTexto([]);
+    setIndiceActual(0);
+    indicePdfRef.current = null;
 
     async function cargar() {
       if (!documento) return;
@@ -66,6 +222,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
 
           const binario = await respuesta.arrayBuffer();
           const pdfjs = await import("pdfjs-dist");
+          pdfjsRef.current = pdfjs;
           // El worker se sirve desde /public (copiado desde pdfjs-dist/build).
           pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
@@ -105,6 +262,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
       tareaRenderRef.current?.cancel();
       tareaRenderRef.current = null;
       pdfRef.current = null;
+      indicePdfRef.current = null;
       if (tareaCargaRef.current) {
         void tareaCargaRef.current.destroy();
         tareaCargaRef.current = null;
@@ -159,6 +317,129 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
       cancelado = true;
     };
   }, [estado, esPdf, pagina, escala]);
+
+  /** Extrae (una sola vez por documento) el texto de todas las páginas del PDF. */
+  const obtenerIndicePdf = React.useCallback((): Promise<PaginaIndexada[]> => {
+    const documentoPdf = pdfRef.current;
+    if (!documentoPdf) return Promise.resolve([]);
+
+    indicePdfRef.current ??= (async () => {
+      const paginas: PaginaIndexada[] = [];
+      for (let numero = 1; numero <= documentoPdf.numPages; numero++) {
+        const paginaPdf = await documentoPdf.getPage(numero);
+        const contenido = await paginaPdf.getTextContent();
+        paginas.push({
+          items: contenido.items.filter((item) => "str" in item) as unknown as ItemTextoPdf[],
+          transformVista: paginaPdf.getViewport({ scale: 1 }).transform,
+        });
+      }
+      return paginas;
+    })();
+
+    return indicePdfRef.current;
+  }, []);
+
+  // Ejecuta la búsqueda interna (con una pequeña espera mientras se escribe).
+  React.useEffect(() => {
+    const termino = consulta.trim();
+    if (!busquedaVisible || estado !== "listo" || termino.length < MINIMO_CONSULTA) {
+      setCoincidenciasPdf([]);
+      setRangosTexto([]);
+      setIndiceActual(0);
+      setIndexando(false);
+      return;
+    }
+
+    let cancelado = false;
+    const temporizador = window.setTimeout(async () => {
+      if (esPdf) {
+        setIndexando(true);
+        try {
+          const paginas = await obtenerIndicePdf();
+          const pdfjs = pdfjsRef.current;
+          if (cancelado || !pdfjs) return;
+
+          const encontradas = calcularCoincidenciasPdf(paginas, termino, pdfjs);
+          setCoincidenciasPdf(encontradas);
+          setIndiceActual(0);
+          if (encontradas.length > 0) setPagina(encontradas[0].pagina);
+        } catch {
+          if (!cancelado) setCoincidenciasPdf([]);
+        } finally {
+          if (!cancelado) setIndexando(false);
+        }
+      } else if (texto !== null) {
+        setRangosTexto(buscarCoincidencias(texto, termino));
+        setIndiceActual(0);
+      }
+    }, 220);
+
+    return () => {
+      cancelado = true;
+      window.clearTimeout(temporizador);
+    };
+  }, [busquedaVisible, consulta, estado, esPdf, texto, obtenerIndicePdf]);
+
+  // Atajos de teclado: Ctrl+F abre la búsqueda, Esc la cierra sin cerrar el visor.
+  React.useEffect(() => {
+    if (!abierto) return;
+
+    function manejarTeclado(evento: KeyboardEvent) {
+      if ((evento.ctrlKey || evento.metaKey) && evento.key.toLowerCase() === "f") {
+        evento.preventDefault();
+        setBusquedaVisible(true);
+        window.setTimeout(() => inputBusquedaRef.current?.select(), 0);
+        return;
+      }
+      if (evento.key === "Escape" && busquedaVisibleRef.current) {
+        evento.preventDefault();
+        evento.stopPropagation();
+        setBusquedaVisible(false);
+      }
+    }
+
+    window.addEventListener("keydown", manejarTeclado, true);
+    return () => window.removeEventListener("keydown", manejarTeclado, true);
+  }, [abierto]);
+
+  const irACoincidencia = React.useCallback(
+    (indice: number) => {
+      if (totalCoincidencias === 0) return;
+      const normalizado = ((indice % totalCoincidencias) + totalCoincidencias) % totalCoincidencias;
+      setIndiceActual(normalizado);
+      if (esPdf) setPagina(coincidenciasPdf[normalizado].pagina);
+    },
+    [totalCoincidencias, esPdf, coincidenciasPdf],
+  );
+
+  /** Al montarse el resaltado de la coincidencia actual, se desplaza hasta él. */
+  const marcarRefActual = React.useCallback((nodo: HTMLElement | null) => {
+    nodo?.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+  }, []);
+
+  function abrirBusqueda() {
+    setBusquedaVisible(true);
+    window.setTimeout(() => inputBusquedaRef.current?.select(), 0);
+  }
+
+  // Rectángulos a pintar sobre la página visible del PDF.
+  const resaltadosPagina = React.useMemo(() => {
+    if (!busquedaVisible || !esPdf) return [];
+
+    const lista: { clave: string; rect: RectResaltado; actual: boolean; primero: boolean }[] = [];
+    coincidenciasPdf.forEach((coincidencia, indice) => {
+      if (coincidencia.pagina !== pagina) return;
+      coincidencia.rects.forEach((rect, posicion) => {
+        lista.push({
+          clave: `${indice}-${posicion}`,
+          rect,
+          actual: indice === indiceActual,
+          primero: posicion === 0,
+        });
+      });
+    });
+    return lista;
+  }, [busquedaVisible, esPdf, coincidenciasPdf, pagina, indiceActual]);
 
   function capturarPantalla() {
     if (!documento) return;
@@ -284,6 +565,16 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={estado !== "listo"}
+              onClick={abrirBusqueda}
+              title="Buscar en el documento (Ctrl+F)"
+            >
+              <Search className="size-3.5" />
+              Buscar
+            </Button>
             <Button variant="outline" size="sm" disabled={estado !== "listo"} onClick={capturarPantalla}>
               <ImageDown className="size-3.5" />
               Capturar imagen
@@ -304,12 +595,22 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
           </div>
         ) : null}
 
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: bloqueo de copia/menú contextual exigido por el módulo para la normativa actualizada */}
-        <div
-          className={cn("relative flex-1 overflow-auto bg-muted/40 p-6", restringido && "select-none")}
-          onContextMenu={bloquearCopia}
-          onCopy={bloquearCopia}
-        >
+        <div className="relative min-h-0 flex-1">
+          {busquedaVisible ? (
+            <BarraBusquedaVisor
+              consulta={consulta}
+              onConsultaChange={setConsulta}
+              total={totalCoincidencias}
+              indiceActual={indiceActual}
+              indexando={indexando}
+              onAnterior={() => irACoincidencia(indiceActual - 1)}
+              onSiguiente={() => irACoincidencia(indiceActual + 1)}
+              onCerrar={() => setBusquedaVisible(false)}
+              inputRef={inputBusquedaRef}
+              className="absolute inset-x-3 top-3 z-20 sm:inset-x-auto sm:right-6 sm:w-96"
+            />
+          ) : null}
+
           {restringido ? (
             <div
               aria-hidden
@@ -326,36 +627,76 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
             </div>
           ) : null}
 
-          {estado === "cargando" ? (
-            <div className="flex h-full items-center justify-center">
-              <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                <Spinner className="size-6" />
-                <span className="text-sm">Cargando documento…</span>
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: bloqueo de copia/menú contextual exigido por el módulo para la normativa actualizada */}
+          <div
+            className={cn("h-full overflow-auto bg-muted/40 p-6", restringido && "select-none")}
+            onContextMenu={bloquearCopia}
+            onCopy={bloquearCopia}
+          >
+            {estado === "cargando" ? (
+              <div className="flex h-full items-center justify-center">
+                <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                  <Spinner className="size-6" />
+                  <span className="text-sm">Cargando documento…</span>
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {estado === "error" ? (
-            <div className="flex h-full items-center justify-center">
-              <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-                <FileX2 className="size-8 text-muted-foreground" />
-                <p className="text-muted-foreground text-sm">{mensajeError}</p>
+            {estado === "error" ? (
+              <div className="flex h-full items-center justify-center">
+                <div className="flex max-w-sm flex-col items-center gap-3 text-center">
+                  <FileX2 className="size-8 text-muted-foreground" />
+                  <p className="text-muted-foreground text-sm">{mensajeError}</p>
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {estado === "listo" && esPdf ? (
-            <div className="flex min-h-full items-start justify-center">
-              <canvas ref={canvasRef} className="rounded-sm shadow-lg ring-1 ring-border" />
-            </div>
-          ) : null}
+            {estado === "listo" && esPdf ? (
+              <div className="flex min-h-full items-start justify-center">
+                <div className="relative">
+                  <canvas ref={canvasRef} className="rounded-sm shadow-lg ring-1 ring-border" />
+                  {resaltadosPagina.length > 0 ? (
+                    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+                      {resaltadosPagina.map((resaltado) => (
+                        <div
+                          key={resaltado.clave}
+                          ref={resaltado.actual && resaltado.primero ? marcarRefActual : undefined}
+                          className={cn(
+                            "absolute rounded-[2px] mix-blend-multiply",
+                            resaltado.actual ? "bg-orange-300 ring-2 ring-orange-500/70" : "bg-yellow-200",
+                          )}
+                          style={{
+                            left: resaltado.rect.x * escala - 1,
+                            top: resaltado.rect.y * escala - 1,
+                            width: resaltado.rect.ancho * escala + 2,
+                            height: resaltado.rect.alto * escala + 2,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
 
-          {estado === "listo" && !esPdf && texto !== null ? (
-            <div className="mx-auto max-w-3xl rounded-sm bg-background p-8 shadow-lg ring-1 ring-border">
-              <h3 className="mb-4 font-semibold text-lg leading-snug">{documento.titulo}</h3>
-              <div className="whitespace-pre-wrap text-sm leading-relaxed">{texto}</div>
-            </div>
-          ) : null}
+            {estado === "listo" && !esPdf && texto !== null ? (
+              <div className="mx-auto max-w-3xl rounded-sm bg-background p-8 shadow-lg ring-1 ring-border">
+                <h3 className="mb-4 font-semibold text-lg leading-snug">{documento.titulo}</h3>
+                <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                  {busquedaVisible && rangosTexto.length > 0 ? (
+                    <TextoResaltado
+                      texto={texto}
+                      rangos={rangosTexto}
+                      indiceActual={indiceActual}
+                      refActual={marcarRefActual}
+                    />
+                  ) : (
+                    texto
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

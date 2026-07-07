@@ -18,7 +18,7 @@ const esquemaCriterios = z.object({
   fechaHasta: esquemaFecha.default(null),
   titulo: z.string().trim().max(200).default(""),
   materias: z.array(z.string().trim().max(120)).max(50).default([]),
-  objeto: z.string().trim().max(400).default(""),
+  objeto: z.string().trim().max(1000).default(""),
   carpetas: z
     .array(z.enum(["EMITIDA", "ACTUALIZADA"]))
     .min(1)
