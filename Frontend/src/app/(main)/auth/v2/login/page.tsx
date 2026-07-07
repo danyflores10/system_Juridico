@@ -10,10 +10,10 @@ import { GoogleButton } from "../../_components/social-auth/google-button";
 export default function LoginV2() {
   return (
     <>
-      <div className="mx-auto flex w-full flex-col justify-center space-y-8 sm:w-[350px]">
-        <div className="space-y-2 text-center">
-          <h1 className="font-medium text-3xl">Iniciar sesión</h1>
-          <p className="text-muted-foreground text-sm">Ingresa tus datos para acceder al sistema.</p>
+      <div className="mx-auto flex w-full animate-in flex-col justify-center space-y-8 duration-700 fade-in slide-in-from-bottom-4 sm:w-[360px]">
+        <div className="space-y-2">
+          <h1 className="font-bold text-3xl tracking-tight">¡Bienvenido de nuevo!</h1>
+          <p className="text-muted-foreground text-sm">Inicia sesión para continuar en el sistema.</p>
         </div>
         <div className="space-y-4">
           <GoogleButton className="w-full" />
