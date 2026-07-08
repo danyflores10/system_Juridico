@@ -19,7 +19,7 @@ import {
   Mail,
   MessageSquare,
   ReceiptText,
-  Scale,
+  Search,
   Server,
   ShoppingBag,
   SquareArrowUpRight,
@@ -109,7 +109,7 @@ export const sidebarItems: NavGroup[] = [
         id: "buscador",
         title: "Buscador jurídico",
         url: "/dashboard/buscador",
-        icon: Scale,
+        icon: Search,
         badge: "new",
       },
       {
