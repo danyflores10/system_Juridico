@@ -88,6 +88,24 @@ export const sidebarItems: NavGroup[] = [
         icon: ClipboardCheck,
       },
       {
+        id: "web-sources",
+        title: "Cargador jurídico",
+        url: "/dashboard/fuentes",
+        icon: Globe2,
+      },
+      {
+        id: "legal-catalogs",
+        title: "Catálogos jurídicos",
+        icon: LibraryBig,
+        subItems: [
+          { id: "catalog-overview", title: "Administrar catálogos", url: "/dashboard/catalogos" },
+          { id: "catalog-matters", title: "Materias", url: "/dashboard/catalogos/materias" },
+          { id: "catalog-rule-types", title: "Tipos de norma", url: "/dashboard/catalogos/tipos-norma" },
+          { id: "catalog-effects", title: "Efectos normativos", url: "/dashboard/catalogos/efectos" },
+          { id: "catalog-entities", title: "Entidades emisoras", url: "/dashboard/catalogos/entidades" },
+        ],
+      },
+      {
         id: "buscador",
         title: "Buscador jurídico",
         url: "/dashboard/buscador",
@@ -207,30 +225,6 @@ export const sidebarItems: NavGroup[] = [
           { id: "auth-login-v2", title: "Inicio de sesión v2", url: "/auth/v2/login", newTab: true },
           { id: "auth-register-v1", title: "Registro v1", url: "/auth/v1/register", newTab: true },
           { id: "auth-register-v2", title: "Registro v2", url: "/auth/v2/register", newTab: true },
-        ],
-      },
-    ],
-  },
-  {
-    id: 3,
-    label: "Configuración",
-    items: [
-      {
-        id: "web-sources",
-        title: "Cargador jurídico",
-        url: "/dashboard/fuentes",
-        icon: Globe2,
-      },
-      {
-        id: "legal-catalogs",
-        title: "Catálogos jurídicos",
-        icon: LibraryBig,
-        subItems: [
-          { id: "catalog-overview", title: "Administrar catálogos", url: "/dashboard/catalogos" },
-          { id: "catalog-matters", title: "Materias", url: "/dashboard/catalogos/materias" },
-          { id: "catalog-rule-types", title: "Tipos de norma", url: "/dashboard/catalogos/tipos-norma" },
-          { id: "catalog-effects", title: "Efectos normativos", url: "/dashboard/catalogos/efectos" },
-          { id: "catalog-entities", title: "Entidades emisoras", url: "/dashboard/catalogos/entidades" },
         ],
       },
     ],

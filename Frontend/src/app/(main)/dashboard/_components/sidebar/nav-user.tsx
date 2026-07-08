@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { CircleUser, CreditCard, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
@@ -73,17 +74,23 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <CircleUser />
-                Cuenta
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/cuenta">
+                  <CircleUser />
+                  Cuenta
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Honorarios
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/finance">
+                  <CreditCard />
+                  Honorarios
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <MessageSquareDot />
-                Notificaciones
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/cuenta">
+                  <MessageSquareDot />
+                  Notificaciones
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

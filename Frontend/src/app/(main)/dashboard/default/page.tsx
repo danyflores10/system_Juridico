@@ -8,44 +8,18 @@ import {
   CheckCircle2,
   Clock3,
   FileText,
+  Gavel,
   Scale,
-  Users,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
-const metrics = [
-  {
-    title: "Expedientes activos",
-    value: "42",
-    detail: "8 requieren seguimiento esta semana",
-    change: "+6%",
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: "Audiencias próximas",
-    value: "7",
-    detail: "3 programadas para las próximas 48 horas",
-    change: "Agenda",
-    icon: CalendarDays,
-  },
-  {
-    title: "Clientes activos",
-    value: "128",
-    detail: "12 consultas nuevas este mes",
-    change: "+9%",
-    icon: Users,
-  },
-  {
-    title: "Documentos pendientes",
-    value: "15",
-    detail: "5 escritos con vencimiento cercano",
-    change: "Prioridad",
-    icon: FileText,
-  },
-];
+import { CaseworkActivity } from "./_components/casework-activity";
+import { LegalKpiCards } from "./_components/legal-kpi-cards";
+import { MatterDistribution } from "./_components/matter-distribution";
 
 const hearings = [
   {
@@ -68,6 +42,13 @@ const hearings = [
     title: "Declaración informativa",
     case: "Exp. CJ-2026-0051",
     court: "Fiscalía Especializada",
+  },
+  {
+    time: "10:00",
+    date: "08 JUL",
+    title: "Lectura de sentencia",
+    case: "Exp. CJ-2026-0029",
+    court: "Juzgado Público Civil 2°",
   },
 ];
 
@@ -108,60 +89,61 @@ const pendingDocuments = [
   { name: "Informe jurídico mensual", case: "Cliente corporativo", due: "Vence en 7 días", urgent: false },
 ];
 
+const teamWorkload = [
+  { name: "Daniel W. Flores", role: "Abogado administrador", cases: 18, capacity: 90 },
+  { name: "Lucía Paredes", role: "Abogada senior", cases: 14, capacity: 70 },
+  { name: "Andrés Quiroga", role: "Abogado junior", cases: 10, capacity: 55 },
+];
+
 export default function Page() {
   return (
     <div className="@container/main flex flex-col gap-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-primary">
-            <Scale className="size-5" />
-            <span className="font-medium text-sm">Consultor Jurídico</span>
+      {/* Hero */}
+      <section className="relative overflow-hidden rounded-none bg-gradient-to-br from-primary to-primary/80 p-6 text-primary-foreground shadow-sm md:p-8">
+        <Scale className="pointer-events-none absolute -right-6 -bottom-8 size-48 rotate-12 text-primary-foreground/10" />
+        <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/15 px-3 py-1 font-medium text-xs uppercase tracking-wide">
+              <Scale className="size-3.5" />
+              Pantalla principal
+            </span>
+            <h1 className="font-semibold text-2xl tracking-tight md:text-3xl">Resumen de gestión legal</h1>
+            <p className="max-w-2xl text-primary-foreground/80 text-sm">
+              Controla expedientes, plazos procesales, audiencias y documentos desde una vista central.
+            </p>
           </div>
-          <h1 className="font-semibold text-2xl tracking-tight md:text-3xl">Resumen de gestión legal</h1>
-          <p className="max-w-2xl text-muted-foreground text-sm">
-            Controla expedientes, plazos procesales, audiencias y documentos desde una vista central.
-          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="secondary">
+              <Link href="/dashboard/calendar">
+                <CalendarDays />
+                Ver agenda
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="secondary"
+              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+            >
+              <Link href="/dashboard/kanban">
+                <BriefcaseBusiness />
+                Gestionar casos
+              </Link>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline">
-            <Link href="/dashboard/calendar">
-              <CalendarDays />
-              Ver agenda
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard/kanban">
-              <BriefcaseBusiness />
-              Gestionar casos
-            </Link>
-          </Button>
-        </div>
+      </section>
+
+      {/* KPIs */}
+      <LegalKpiCards />
+
+      {/* Charts */}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)]">
+        <CaseworkActivity />
+        <MatterDistribution />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {metrics.map((metric) => {
-          const Icon = metric.icon;
-          return (
-            <Card key={metric.title}>
-              <CardHeader className="gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="flex size-9 items-center justify-center rounded-md border bg-muted">
-                    <Icon className="size-4 text-muted-foreground" />
-                  </span>
-                  <Badge variant="outline">{metric.change}</Badge>
-                </div>
-                <CardDescription>{metric.title}</CardDescription>
-                <CardTitle className="text-3xl tabular-nums">{metric.value}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm">{metric.detail}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+      {/* Priority cases + hearings */}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)]">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-4">
@@ -181,14 +163,16 @@ export default function Page() {
             {priorityCases.map((caseItem) => (
               <div
                 key={caseItem.code}
-                className="grid gap-3 border-b py-4 last:border-b-0 sm:grid-cols-[120px_minmax(0,1fr)_auto] sm:items-center"
+                className="grid gap-3 border-b py-4 last:border-b-0 sm:grid-cols-[130px_minmax(0,1fr)_auto] sm:items-center"
               >
-                <span className="font-medium text-sm">{caseItem.code}</span>
+                <span className="font-medium font-mono text-muted-foreground text-xs">{caseItem.code}</span>
                 <div className="min-w-0">
                   <p className="truncate font-medium text-sm">{caseItem.client}</p>
                   <p className="truncate text-muted-foreground text-xs">{caseItem.matter}</p>
                 </div>
-                <Badge variant={caseItem.tone}>{caseItem.status}</Badge>
+                <Badge variant={caseItem.tone} className="w-fit">
+                  {caseItem.status}
+                </Badge>
               </div>
             ))}
           </CardContent>
@@ -196,17 +180,22 @@ export default function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Próximas audiencias</CardTitle>
-            <CardDescription>Agenda judicial de los siguientes días.</CardDescription>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <CardTitle>Próximas audiencias</CardTitle>
+                <CardDescription>Agenda judicial de los siguientes días.</CardDescription>
+              </div>
+              <Gavel className="size-4 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {hearings.map((hearing) => (
               <div key={`${hearing.date}-${hearing.time}`} className="flex gap-3">
-                <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-md border bg-muted py-2">
+                <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-lg border bg-muted/50 py-2">
                   <span className="font-semibold text-xs">{hearing.date}</span>
                   <span className="text-muted-foreground text-xs">{hearing.time}</span>
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 border-b pb-3 last:border-b-0 last:pb-0">
                   <p className="font-medium text-sm">{hearing.title}</p>
                   <p className="text-muted-foreground text-xs">{hearing.case}</p>
                   <p className="truncate text-muted-foreground text-xs">{hearing.court}</p>
@@ -217,7 +206,8 @@ export default function Page() {
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* Documents + operational status + workload */}
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Documentos pendientes</CardTitle>
@@ -225,8 +215,8 @@ export default function Page() {
           </CardHeader>
           <CardContent className="space-y-3">
             {pendingDocuments.map((document) => (
-              <div key={document.name} className="flex items-center gap-3 rounded-md border p-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted">
+              <div key={document.name} className="flex items-center gap-3 rounded-lg border p-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
                   <FileText className="size-4 text-muted-foreground" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -242,32 +232,53 @@ export default function Page() {
         <Card>
           <CardHeader>
             <CardTitle>Estado operativo</CardTitle>
-            <CardDescription>Resumen de cumplimiento y carga de trabajo.</CardDescription>
+            <CardDescription>Cumplimiento de plazos y carga de trabajo.</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            <div className="flex items-start gap-3 rounded-md border p-4">
+          <CardContent className="space-y-3">
+            <div className="flex items-start gap-3 rounded-lg border p-3">
               <CheckCircle2 className="mt-0.5 size-5 text-emerald-600" />
               <div>
                 <p className="font-medium text-sm">Plazos controlados</p>
                 <p className="text-muted-foreground text-xs">34 actuaciones dentro de plazo.</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-md border p-4">
+            <div className="flex items-start gap-3 rounded-lg border p-3">
               <Clock3 className="mt-0.5 size-5 text-amber-600" />
               <div>
                 <p className="font-medium text-sm">Seguimientos</p>
                 <p className="text-muted-foreground text-xs">9 tareas pendientes esta semana.</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-md border p-4 sm:col-span-2">
+            <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
               <AlertTriangle className="mt-0.5 size-5 text-destructive" />
               <div>
                 <p className="font-medium text-sm">Atención requerida</p>
                 <p className="text-muted-foreground text-xs">
-                  Dos expedientes tienen plazos críticos y requieren revisión prioritaria.
+                  2 expedientes tienen plazos críticos y requieren revisión prioritaria.
                 </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Carga del equipo</CardTitle>
+            <CardDescription>Distribución de expedientes por abogado.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {teamWorkload.map((member) => (
+              <div key={member.name} className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-sm">{member.name}</p>
+                    <p className="truncate text-muted-foreground text-xs">{member.role}</p>
+                  </div>
+                  <span className="shrink-0 font-medium text-sm tabular-nums">{member.cases} casos</span>
+                </div>
+                <Progress value={member.capacity} className="h-1.5" />
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>

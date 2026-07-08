@@ -83,23 +83,27 @@ export function RevisionBandejaClient() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="relative overflow-hidden rounded-2xl bg-slate-950 px-6 py-7 text-white shadow-sm dark:bg-slate-900">
-        <div className="absolute -top-20 right-8 size-64 rounded-full bg-violet-500/15 blur-3xl" />
-        <div className="relative max-w-3xl">
-          <div className="mb-3 flex items-center gap-2 text-xs font-medium tracking-[0.22em] text-violet-300 uppercase"><FileSearch className="size-4" /> Trabajo pendiente</div>
-          <h1 className="text-3xl font-semibold tracking-tight">Bandeja de revisión jurídica</h1>
-          <p className="mt-2 text-slate-300">Revise únicamente los documentos que necesitan una decisión jurídica.</p>
+      <section className="relative overflow-hidden rounded-none bg-gradient-to-br from-primary to-primary/80 p-6 text-primary-foreground shadow-sm md:p-8">
+        <FileSearch className="pointer-events-none absolute -right-6 -bottom-8 size-48 rotate-12 text-primary-foreground/10" />
+        <div className="relative max-w-3xl space-y-2">
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/15 px-3 py-1 font-medium text-xs uppercase tracking-wide">
+            <FileSearch className="size-3.5" /> Revisión jurídica
+          </span>
+          <h1 className="font-semibold text-2xl tracking-tight md:text-3xl">Bandeja de revisión jurídica</h1>
+          <p className="max-w-2xl text-primary-foreground/80 text-sm">
+            Revise únicamente los documentos que necesitan una decisión jurídica.
+          </p>
         </div>
-      </div>
+      </section>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {views.map((view, index) => {
           const Icon = view.icon;
           const selected = vista === view.value;
           return (
-            <button key={view.label} type="button" onClick={() => changeView(view.value)} className={cn("rounded-xl border p-4 text-left transition-all", selected ? "border-violet-500 bg-violet-500/5 shadow-sm ring-1 ring-violet-500/20" : "bg-card hover:border-foreground/30")}>
+            <button key={view.label} type="button" onClick={() => changeView(view.value)} className={cn("rounded-xl border p-4 text-left transition-all", selected ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20" : "bg-card hover:border-foreground/30 hover:shadow-sm")}>
               <div className="flex items-start justify-between">
-                <div className={cn("grid size-9 place-items-center rounded-lg", selected ? "bg-violet-600 text-white" : "bg-muted text-muted-foreground")}><Icon className="size-4" /></div>
+                <div className={cn("grid size-9 place-items-center rounded-lg", selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}><Icon className="size-4" /></div>
                 {summary.loading ? <Skeleton className="h-8 w-10" /> : <span className="text-2xl font-semibold tabular-nums">{summary.values[index]}</span>}
               </div>
               <div className="mt-3 font-medium">{view.label}</div>
