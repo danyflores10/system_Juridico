@@ -4,6 +4,7 @@ import {
   ChartBar,
   CheckSquare,
   ClipboardCheck,
+  FileDiff,
   FileText,
   Fingerprint,
   Forklift,
@@ -104,6 +105,13 @@ export const sidebarItems: NavGroup[] = [
           { id: "catalog-effects", title: "Efectos normativos", url: "/dashboard/catalogos/efectos" },
           { id: "catalog-entities", title: "Entidades emisoras", url: "/dashboard/catalogos/entidades" },
         ],
+      },
+      {
+        id: "modificador",
+        title: "Modificador jurídico",
+        url: "/dashboard/modificador",
+        icon: FileDiff,
+        badge: "new",
       },
       {
         id: "buscador",

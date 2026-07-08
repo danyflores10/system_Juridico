@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.catalogos.apps.CatalogosConfig',
     'apps.fuentes.apps.FuentesConfig',
     'apps.normativa.apps.NormativaConfig',
+    'apps.modificador.apps.ModificadorConfig',
 ]
 
 MIDDLEWARE = [
@@ -183,6 +184,12 @@ FINAL_NORMATIVA_ROOT = (
     Path(_final_normativa_root)
     if _final_normativa_root
     else BASE_DIR / 'NORMATIVA EMITIDA'
+)
+_normativa_actualizada_root = os.getenv('NORMATIVA_ACTUALIZADA_ROOT', '').strip()
+NORMATIVA_ACTUALIZADA_ROOT = (
+    Path(_normativa_actualizada_root)
+    if _normativa_actualizada_root
+    else BASE_DIR / 'NORMATIVA ACTUALIZADA'
 )
 FINAL_FILENAME_MAX_LENGTH = int(
     os.getenv('FINAL_FILENAME_MAX_LENGTH', '230')
