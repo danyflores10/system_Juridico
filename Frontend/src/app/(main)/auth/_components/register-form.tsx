@@ -98,7 +98,10 @@ export function RegisterForm() {
           )}
         />
       </FieldGroup>
-      <Button className="w-full" type="submit">
+      <Button
+        className="w-full bg-linear-to-b from-[#2f86ff] to-[#0e63e0] font-medium text-white shadow-[#1279fd]/25 shadow-lg transition-all duration-300 hover:from-[#4292ff] hover:to-[#1670ef] hover:shadow-[#1279fd]/40 hover:shadow-xl active:scale-[0.98]"
+        type="submit"
+      >
         Registrarse
       </Button>
     </form>
