@@ -16,8 +16,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { APP_CONFIG } from "@/config/app-config";
-import { rootUser } from "@/data/users";
-import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
+import { filtrarSidebarPorRol, sidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
 import { NavMain } from "./nav-main";
@@ -62,7 +61,18 @@ const _data = {
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export interface UsuarioSidebar {
+  readonly name: string;
+  readonly email: string;
+  readonly avatar: string;
+  readonly role: string;
+  readonly esAdmin: boolean;
+}
+
+export function AppSidebar({
+  usuario,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { readonly usuario: UsuarioSidebar }) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
     useShallow((s) => ({
       sidebarVariant: s.sidebarVariant,
@@ -73,6 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const variant = isSynced ? sidebarVariant : props.variant;
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
+  const itemsVisibles = filtrarSidebarPorRol(sidebarItems, usuario.esAdmin);
 
   return (
     <Sidebar {...props} variant={variant} collapsible={collapsible}>
@@ -99,16 +110,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <NavProfile user={rootUser} />
+        <NavProfile user={usuario} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={sidebarItems} />
+        <NavMain items={itemsVisibles} />
         {/* <NavDocuments items={data.documents} /> */}
         {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
         <SidebarSupportCard />
-        <NavUser user={rootUser} />
+        <NavUser user={usuario} />
       </SidebarFooter>
     </Sidebar>
   );

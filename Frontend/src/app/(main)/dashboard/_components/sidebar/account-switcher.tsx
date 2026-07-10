@@ -36,8 +36,10 @@ export function AccountSwitcher({
     return null;
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
     router.replace("/auth/v2/login");
+    router.refresh();
   };
 
   return (

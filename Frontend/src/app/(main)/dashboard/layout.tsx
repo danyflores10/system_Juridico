@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { users } from "@/data/users";
 import { SIDEBAR_COLLAPSIBLE_VALUES, SIDEBAR_VARIANT_VALUES } from "@/lib/preferences/layout";
 import { cn } from "@/lib/utils";
+import { obtenerSesion } from "@/server/auth/session";
 import { getPreference } from "@/server/server-actions";
 
 import { AccountSwitcher } from "./_components/sidebar/account-switcher";
@@ -16,6 +17,18 @@ import { FullscreenToggle, MessagesMenu, NotificationsMenu } from "./_components
 import { SearchDialog } from "./_components/sidebar/search-dialog";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
+  const sesion = await obtenerSesion();
+  if (!sesion) redirect("/auth/v2/login");
+
+  const usuarioSidebar = {
+    id: String(sesion.id),
+    name: `${sesion.nombre} ${sesion.apellido}`.trim() || sesion.email,
+    email: sesion.email,
+    avatar: "",
+    role: sesion.rol === "admin" ? "Administrador" : "Usuario",
+    esAdmin: sesion.rol === "admin",
+  };
+
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
   const [variant, collapsible] = await Promise.all([
@@ -32,7 +45,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant={variant} collapsible={collapsible} />
+      <AppSidebar variant={variant} collapsible={collapsible} usuario={usuarioSidebar} />
       <SidebarInset
         className={cn(
           "[html[data-content-layout=centered]_&>*]:mx-auto",
@@ -64,7 +77,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
               <NotificationsMenu />
               <FullscreenToggle />
               <LayoutControls />
-              <AccountSwitcher users={users} />
+              <AccountSwitcher users={[usuarioSidebar]} />
             </div>
           </div>
         </header>

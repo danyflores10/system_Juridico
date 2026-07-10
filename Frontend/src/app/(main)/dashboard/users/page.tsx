@@ -1,6 +1,12 @@
-import { users } from "./_components/data";
-import { Users } from "./_components/users";
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  return <Users users={users} />;
+import { UsuariosPageClient } from "@/features/usuarios/components/usuarios-page-client";
+import { obtenerSesion } from "@/server/auth/session";
+
+export default async function Page() {
+  const sesion = await obtenerSesion();
+  if (!sesion) redirect("/auth/v2/login");
+  if (sesion.rol !== "admin") redirect("/unauthorized");
+
+  return <UsuariosPageClient usuarioActualId={sesion.id} />;
 }

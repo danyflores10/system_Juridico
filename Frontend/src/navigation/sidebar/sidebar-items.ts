@@ -46,6 +46,8 @@ interface NavItemBase {
   badge?: NavBadge;
   disabled?: boolean;
   newTab?: boolean;
+  /** Visible únicamente para cuentas con rol administrador. */
+  adminOnly?: boolean;
 }
 
 export interface NavMainLinkItem extends NavItemBase {
@@ -63,6 +65,17 @@ export interface NavGroup {
   id: number;
   label?: string;
   items: NavMainItem[];
+}
+
+/** Filtra los grupos del menú según el rol del usuario autenticado. */
+export function filtrarSidebarPorRol(grupos: NavGroup[], esAdmin: boolean): NavGroup[] {
+  if (esAdmin) return grupos;
+  return grupos
+    .map((grupo) => ({
+      ...grupo,
+      items: grupo.items.filter((item) => !item.adminOnly),
+    }))
+    .filter((grupo) => grupo.items.length > 0);
 }
 
 export const sidebarItems: NavGroup[] = [
@@ -217,12 +230,14 @@ export const sidebarItems: NavGroup[] = [
         title: "Usuarios",
         url: "/dashboard/users",
         icon: Users,
+        adminOnly: true,
       },
       {
         id: "roles",
         title: "Roles",
         url: "/dashboard/roles",
         icon: Lock,
+        adminOnly: true,
       },
       {
         id: "authentication",

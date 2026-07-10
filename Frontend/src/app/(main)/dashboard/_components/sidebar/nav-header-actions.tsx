@@ -20,7 +20,13 @@ const messages = [
 ];
 
 const notifications = [
-  { id: 1, icon: CalendarClock, title: "Audiencia programada", desc: "Mañana a las 09:00 — CJ-2026-0042", time: "hace 10 min" },
+  {
+    id: 1,
+    icon: CalendarClock,
+    title: "Audiencia programada",
+    desc: "Mañana a las 09:00 — CJ-2026-0042",
+    time: "hace 10 min",
+  },
   { id: 2, icon: FileText, title: "Nuevo documento", desc: "Se subió un archivo a CJ-2026-0038", time: "hace 2 h" },
   { id: 3, icon: Scale, title: "Vencimiento de plazo", desc: "Quedan 3 días en CJ-2026-0051", time: "ayer" },
 ];
