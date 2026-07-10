@@ -258,6 +258,37 @@ html {
   overscroll-behavior: none;
 }
 
+/* Borde con gradiente animado en los colores de Google (botón "Continuar con Google"). */
+@property --google-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes google-border-spin {
+  to {
+    --google-angle: 360deg;
+  }
+}
+
+.google-gradient-border {
+  background: conic-gradient(
+    from var(--google-angle),
+    #ea4335,
+    #fbbc05 25%,
+    #34a853 50%,
+    #4285f4 75%,
+    #ea4335
+  );
+  animation: google-border-spin 4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .google-gradient-border {
+    animation: none;
+  }
+}
+
 .disable-transitions * {
   transition: none !important;
 }

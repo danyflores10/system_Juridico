@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { CircleUser, CreditCard, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
+import { CircleUser, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -90,12 +90,6 @@ export function NavUser({
                 <Link href="/dashboard/cuenta">
                   <CircleUser />
                   Cuenta
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/finance">
-                  <CreditCard />
-                  Honorarios
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
