@@ -45,6 +45,9 @@ class UsuarioSerializer(serializers.ModelSerializer):
         allow_blank=False,
         style={'input_type': 'password'},
     )
+    avatar = serializers.SerializerMethodField()
+    avatar_upload = serializers.ImageField(write_only=True, required=False)
+    avatar_clear = serializers.BooleanField(write_only=True, required=False, default=False)
     fecha_registro = serializers.DateTimeField(source='date_joined', read_only=True)
     ultimo_acceso = serializers.DateTimeField(source='last_login', read_only=True)
 
@@ -58,16 +61,27 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'rol',
             'activo',
             'password',
+            'avatar',
+            'avatar_upload',
+            'avatar_clear',
             'fecha_registro',
             'ultimo_acceso',
         ]
         extra_kwargs = {'email': {'required': True}}
+
+    def get_avatar(self, usuario):
+        return _avatar_absoluto(usuario, self.context)
 
     def validate_email(self, value):
         return _validar_email_unico(value, usuario_actual=self.instance)
 
     def validate_password(self, value):
         return _validar_contrasena(value, self.instance)
+
+    def validate_avatar_upload(self, archivo):
+        if archivo and archivo.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError('La imagen no debe superar los 5 MB.')
+        return archivo
 
     def validate(self, attrs):
         if self.instance is None and not attrs.get('password'):
@@ -86,12 +100,17 @@ class UsuarioSerializer(serializers.ModelSerializer):
         rol = validated_data.pop('rol')
         password = validated_data.pop('password')
         email = validated_data.pop('email')
+        avatar_upload = validated_data.pop('avatar_upload', None)
+        validated_data.pop('avatar_clear', None)
         usuario = User(username=email, email=email, **validated_data)
         usuario.is_staff = rol == PerfilUsuario.Rol.ADMIN
         usuario.set_password(password)
         usuario.save()
+        defaults = {'rol': rol}
+        if avatar_upload is not None:
+            defaults['avatar'] = avatar_upload
         PerfilUsuario.objects.update_or_create(
-            usuario=usuario, defaults={'rol': rol}
+            usuario=usuario, defaults=defaults
         )
         return usuario
 
@@ -100,6 +119,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
         rol = validated_data.pop('rol', None)
         password = validated_data.pop('password', None)
         email = validated_data.pop('email', None)
+        avatar_upload = validated_data.pop('avatar_upload', None)
+        avatar_clear = validated_data.pop('avatar_clear', False)
         if email:
             instance.email = email
             instance.username = email
@@ -115,6 +136,12 @@ class UsuarioSerializer(serializers.ModelSerializer):
         if password:
             instance.set_password(password)
         instance.save()
+        if avatar_upload is not None or avatar_clear:
+            perfil, _ = PerfilUsuario.objects.get_or_create(usuario=instance)
+            if perfil.avatar:
+                perfil.avatar.delete(save=False)
+            perfil.avatar = avatar_upload if avatar_upload is not None else None
+            perfil.save(update_fields=['avatar'])
         # Limpia relaciones cacheadas (p. ej. perfil por select_related)
         # para que la respuesta refleje el rol recién guardado.
         instance.refresh_from_db()

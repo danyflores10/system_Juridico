@@ -3,7 +3,7 @@ from django.utils import timezone
 from PIL import Image
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
@@ -174,6 +174,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     serializer_class = UsuarioSerializer
     permission_classes = [EsAdministrador]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
     search_fields = ['first_name', 'last_name', 'email']
     ordering_fields = ['first_name', 'email', 'date_joined', 'last_login']
     ordering = ['-date_joined']
@@ -231,7 +232,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         usuario = self.get_object()
         usuario.is_active = True
         usuario.save(update_fields=['is_active'])
-        return Response(UsuarioSerializer(usuario).data)
+        return Response(UsuarioSerializer(usuario, context={'request': request}).data)
 
     @action(detail=True, methods=['post'])
     def desactivar(self, request, pk=None):
@@ -243,4 +244,4 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             )
         usuario.is_active = False
         usuario.save(update_fields=['is_active'])
-        return Response(UsuarioSerializer(usuario).data)
+        return Response(UsuarioSerializer(usuario, context={'request': request}).data)

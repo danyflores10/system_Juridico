@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/lib/utils";
+import { colorAvatar, inicialesAvatar } from "@/lib/avatar";
 
 export function NavProfile({
   user,
@@ -19,8 +19,11 @@ export function NavProfile({
         <div className="relative">
           <Avatar className="size-20 rounded-full">
             <AvatarImage src={user.avatar || undefined} alt={user.name} className="rounded-full object-cover" />
-            <AvatarFallback className="rounded-full bg-[#1279fd]/10 font-semibold text-[#0e63e0] text-lg dark:text-[#6fb0ff]">
-              {getInitials(user.name)}
+            <AvatarFallback
+              className="rounded-full font-semibold text-lg text-white"
+              style={{ backgroundColor: colorAvatar(user.name) }}
+            >
+              {inicialesAvatar(user.name)}
             </AvatarFallback>
           </Avatar>
           {/* Indicador de conexión animado */}
@@ -40,8 +43,11 @@ export function NavProfile({
         <div className="relative">
           <Avatar className="size-8 rounded-full">
             <AvatarImage src={user.avatar || undefined} alt={user.name} className="rounded-full object-cover" />
-            <AvatarFallback className="rounded-full bg-[#1279fd]/10 font-semibold text-[#0e63e0] text-xs dark:text-[#6fb0ff]">
-              {getInitials(user.name)}
+            <AvatarFallback
+              className="rounded-full font-semibold text-white text-xs"
+              style={{ backgroundColor: colorAvatar(user.name) }}
+            >
+              {inicialesAvatar(user.name)}
             </AvatarFallback>
           </Avatar>
           <span className="absolute right-0 bottom-0 flex size-2.5">

@@ -34,7 +34,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { getInitials } from "@/lib/utils";
+import { colorAvatar, inicialesAvatar } from "@/lib/avatar";
 import type { PerfilCompleto } from "@/server/auth/session";
 
 function extraerError(payload: unknown, respaldo: string): string {
@@ -251,7 +251,7 @@ export function CuentaClient({ perfil }: { readonly perfil: PerfilCompleto }) {
                   <AvatarImage src={perfil.avatar} alt={nombreCompleto} className="rounded-full object-cover" />
                 ) : null}
                 <AvatarFallback className="rounded-full bg-transparent font-semibold text-2xl text-white">
-                  {getInitials(nombreCompleto)}
+                  {inicialesAvatar(nombreCompleto, perfil.email)}
                 </AvatarFallback>
               </Avatar>
               {/* Superposición para cambiar la foto al pasar el cursor */}
@@ -486,8 +486,11 @@ export function CuentaClient({ perfil }: { readonly perfil: PerfilCompleto }) {
                     {perfil.avatar ? (
                       <AvatarImage src={perfil.avatar} alt={nombreCompleto} className="rounded-full object-cover" />
                     ) : null}
-                    <AvatarFallback className="rounded-full bg-muted font-medium text-muted-foreground text-xs">
-                      {getInitials(nombreCompleto)}
+                    <AvatarFallback
+                      className="rounded-full font-semibold text-white text-xs"
+                      style={{ backgroundColor: colorAvatar(nombreCompleto || perfil.email) }}
+                    >
+                      {inicialesAvatar(nombreCompleto, perfil.email)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Trash2, Upload } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -20,8 +21,12 @@ import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/compo
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 import type { Usuario, UsuarioPayload } from "../types";
+
+const TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const TAMANO_MAXIMO_FOTO = 5 * 1024 * 1024; // 5 MB
 
 const esquema = z.object({
   nombre: z.string().min(2, { message: "Ingresa el nombre." }),
@@ -65,6 +70,10 @@ export function UsuarioFormDialog({
   const esEdicion = usuario !== null;
   const [mostrarPassword, setMostrarPassword] = useState(false);
 
+  const inputFotoRef = useRef<HTMLInputElement>(null);
+  const [fotoArchivo, setFotoArchivo] = useState<File | null>(null);
+  const [fotoEliminada, setFotoEliminada] = useState(false);
+
   const form = useForm<ValoresFormulario>({
     resolver: zodResolver(esquema),
     defaultValues: VALORES_INICIALES,
@@ -73,6 +82,8 @@ export function UsuarioFormDialog({
   useEffect(() => {
     if (abierto) {
       setMostrarPassword(false);
+      setFotoArchivo(null);
+      setFotoEliminada(false);
       form.reset(
         usuario
           ? {
@@ -88,6 +99,39 @@ export function UsuarioFormDialog({
     }
   }, [abierto, usuario, form]);
 
+  // Vista previa: foto recién elegida, o la actual, o ninguna (iniciales de color).
+  const previewNuevaFoto = useMemo(() => (fotoArchivo ? URL.createObjectURL(fotoArchivo) : null), [fotoArchivo]);
+  useEffect(() => {
+    return () => {
+      if (previewNuevaFoto) URL.revokeObjectURL(previewNuevaFoto);
+    };
+  }, [previewNuevaFoto]);
+  const fotoPreview = previewNuevaFoto ?? (fotoEliminada ? null : (usuario?.avatar ?? null));
+
+  const nombreVista = `${form.watch("nombre") ?? ""} ${form.watch("apellido") ?? ""}`.trim();
+  const emailVista = form.watch("email") ?? "";
+
+  const seleccionarFoto = (evento: React.ChangeEvent<HTMLInputElement>) => {
+    const archivo = evento.target.files?.[0];
+    evento.target.value = ""; // permite volver a elegir el mismo archivo
+    if (!archivo) return;
+    if (!TIPOS_FOTO.includes(archivo.type)) {
+      toast.error("Formato no permitido", { description: "Usa una imagen JPG, PNG, WEBP o GIF." });
+      return;
+    }
+    if (archivo.size > TAMANO_MAXIMO_FOTO) {
+      toast.error("Imagen demasiado grande", { description: "La foto no debe superar los 5 MB." });
+      return;
+    }
+    setFotoArchivo(archivo);
+    setFotoEliminada(false);
+  };
+
+  const quitarFoto = () => {
+    setFotoArchivo(null);
+    setFotoEliminada(true);
+  };
+
   const onSubmit = (valores: ValoresFormulario) => {
     if (!esEdicion && !valores.password) {
       form.setError("password", { message: "La contraseña es obligatoria al crear un usuario." });
@@ -101,12 +145,14 @@ export function UsuarioFormDialog({
       activo: valores.activo,
     };
     if (valores.password) payload.password = valores.password;
+    if (fotoArchivo) payload.avatar = fotoArchivo;
+    else if (fotoEliminada && usuario?.avatar) payload.avatar = null;
     onGuardar(payload);
   };
 
   return (
     <Dialog open={abierto} onOpenChange={(estado) => !estado && onCerrar()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{esEdicion ? "Editar usuario" : "Nuevo usuario"}</DialogTitle>
           <DialogDescription>
@@ -118,6 +164,53 @@ export function UsuarioFormDialog({
 
         <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
           <FieldGroup className="gap-4">
+            <div className="flex items-center gap-4">
+              <UserAvatar
+                nombre={nombreVista}
+                email={emailVista}
+                src={fotoPreview}
+                className="size-16"
+                fallbackClassName="text-lg"
+              />
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={guardando}
+                    onClick={() => inputFotoRef.current?.click()}
+                  >
+                    <Upload className="size-4" />
+                    {fotoPreview ? "Cambiar foto" : "Subir foto"}
+                  </Button>
+                  {fotoPreview && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={guardando}
+                      onClick={quitarFoto}
+                      className="text-muted-foreground"
+                    >
+                      <Trash2 className="size-4" />
+                      Quitar
+                    </Button>
+                  )}
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  JPG, PNG o WEBP · máx. 5 MB. Sin foto se usan las iniciales.
+                </p>
+                <input
+                  ref={inputFotoRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  hidden
+                  onChange={seleccionarFoto}
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Controller
                 control={form.control}

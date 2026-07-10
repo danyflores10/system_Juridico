@@ -15,7 +15,6 @@ import {
   UserX,
 } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,8 +29,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { getApiErrorMessage } from "@/lib/api/client";
-import { getInitials } from "@/lib/utils";
 
 import { useUsuarioMutations, useUsuarios } from "../hooks";
 import type { RolUsuario, Usuario, UsuarioPayload } from "../types";
@@ -270,11 +269,13 @@ export function UsuariosPageClient({ usuarioActualId }: { readonly usuarioActual
                       <TableRow key={usuario.id} className={isFetching ? "opacity-60" : undefined}>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <Avatar className="size-9">
-                              <AvatarFallback className="bg-[#1279fd]/10 font-medium text-[#0e63e0] text-xs dark:bg-[#1279fd]/20 dark:text-[#6fb0ff]">
-                                {getInitials(`${usuario.nombre} ${usuario.apellido}`.trim() || usuario.email)}
-                              </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar
+                              nombre={`${usuario.nombre} ${usuario.apellido}`.trim()}
+                              email={usuario.email}
+                              src={usuario.avatar}
+                              className="size-9"
+                              fallbackClassName="text-xs"
+                            />
                             <div className="min-w-0">
                               <p className="truncate font-medium text-sm">
                                 {`${usuario.nombre} ${usuario.apellido}`.trim() || "Sin nombre"}

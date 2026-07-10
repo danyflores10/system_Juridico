@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Ingresa un correo electrónico válido." }),
@@ -98,10 +99,9 @@ export function LoginForm() {
           render={({ field, fieldState }) => (
             <Field className="gap-1.5" data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="login-password">Contraseña</FieldLabel>
-              <Input
+              <PasswordInput
                 {...field}
                 id="login-password"
-                type="password"
                 placeholder="••••••••"
                 autoComplete="current-password"
                 disabled={enviando}

@@ -7,6 +7,7 @@ export interface Usuario {
   email: string;
   rol: RolUsuario;
   activo: boolean;
+  avatar: string | null;
   fecha_registro: string;
   ultimo_acceso: string | null;
 }
@@ -25,6 +26,8 @@ export interface UsuarioPayload {
   rol: RolUsuario;
   activo?: boolean;
   password?: string;
+  // Foto: File = subir nueva, null = quitar la actual, undefined = sin cambios.
+  avatar?: File | null;
 }
 
 export interface PaginatedResponse<T> {

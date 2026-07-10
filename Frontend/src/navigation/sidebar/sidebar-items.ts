@@ -132,6 +132,13 @@ export const sidebarItems: NavGroup[] = [
         icon: Search,
       },
       {
+        id: "users",
+        title: "Usuarios",
+        url: "/dashboard/users",
+        icon: Users,
+        adminOnly: true,
+      },
+      {
         id: "crm",
         title: "Clientes y casos",
         url: "/dashboard/crm",
@@ -220,13 +227,6 @@ export const sidebarItems: NavGroup[] = [
         title: "Facturación",
         url: "/dashboard/invoice",
         icon: ReceiptText,
-      },
-      {
-        id: "users",
-        title: "Usuarios",
-        url: "/dashboard/users",
-        icon: Users,
-        adminOnly: true,
       },
       {
         id: "roles",
