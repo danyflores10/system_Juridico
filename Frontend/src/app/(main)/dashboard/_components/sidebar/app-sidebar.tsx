@@ -72,16 +72,16 @@ export function AppSidebar({
   usuario,
   ...props
 }: React.ComponentProps<typeof Sidebar> & { readonly usuario: UsuarioSidebar }) {
-  const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
+  const { sidebarVariant, isSynced } = usePreferencesStore(
     useShallow((s) => ({
       sidebarVariant: s.sidebarVariant,
-      sidebarCollapsible: s.sidebarCollapsible,
       isSynced: s.isSynced,
     })),
   );
 
   const variant = isSynced ? sidebarVariant : props.variant;
-  const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
+  // El menú siempre colapsa a modo "solo iconos"; nunca se oculta por completo.
+  const collapsible = "icon";
   const itemsVisibles = filtrarSidebarPorRol(sidebarItems, usuario.esAdmin);
 
   return (

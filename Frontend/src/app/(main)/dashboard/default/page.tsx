@@ -137,13 +137,13 @@ export default function Page() {
       <LegalKpiCards />
 
       {/* Charts */}
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)]">
+      <div className="grid gap-4 @4xl/main:grid-cols-[minmax(0,1.6fr)_minmax(300px,0.9fr)]">
         <CaseworkActivity />
         <MatterDistribution />
       </div>
 
       {/* Priority cases + hearings */}
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)]">
+      <div className="grid gap-4 @4xl/main:grid-cols-[minmax(0,1.6fr)_minmax(300px,0.9fr)]">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-4">
@@ -207,7 +207,7 @@ export default function Page() {
       </div>
 
       {/* Documents + operational status + workload */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 @4xl/main:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Documentos pendientes</CardTitle>

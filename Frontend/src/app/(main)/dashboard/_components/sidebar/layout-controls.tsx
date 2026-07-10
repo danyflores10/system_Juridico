@@ -8,14 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { type FontKey, fontOptions } from "@/lib/fonts/registry";
-import type { ContentLayout, NavbarStyle, SidebarCollapsible, SidebarVariant } from "@/lib/preferences/layout";
-import {
-  applyContentLayout,
-  applyFont,
-  applyNavbarStyle,
-  applySidebarCollapsible,
-  applySidebarVariant,
-} from "@/lib/preferences/layout-utils";
+import type { ContentLayout, NavbarStyle, SidebarVariant } from "@/lib/preferences/layout";
+import { applyContentLayout, applyFont, applyNavbarStyle, applySidebarVariant } from "@/lib/preferences/layout-utils";
 import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
 import { persistPreference } from "@/lib/preferences/preferences-storage";
 import { THEME_PRESET_OPTIONS, type ThemeMode, type ThemePreset } from "@/lib/preferences/theme";
@@ -34,8 +28,6 @@ export function LayoutControls() {
   const setNavbarStyle = usePreferencesStore((s) => s.setNavbarStyle);
   const variant = usePreferencesStore((s) => s.sidebarVariant);
   const setSidebarVariant = usePreferencesStore((s) => s.setSidebarVariant);
-  const collapsible = usePreferencesStore((s) => s.sidebarCollapsible);
-  const setSidebarCollapsible = usePreferencesStore((s) => s.setSidebarCollapsible);
   const font = usePreferencesStore((s) => s.font);
   const setFont = usePreferencesStore((s) => s.setFont);
 
@@ -72,13 +64,6 @@ export function LayoutControls() {
     void persistPreference("sidebar_variant", value);
   };
 
-  const onSidebarCollapseModeChange = (value: SidebarCollapsible | "") => {
-    if (!value) return;
-    setSidebarCollapsible(value);
-    applySidebarCollapsible(value);
-    void persistPreference("sidebar_collapsible", value);
-  };
-
   const onFontChange = (value: FontKey | "") => {
     if (!value) return;
     applyFont(value);
@@ -92,7 +77,6 @@ export function LayoutControls() {
     onContentLayoutChange(PREFERENCE_DEFAULTS.content_layout);
     onNavbarStyleChange(PREFERENCE_DEFAULTS.navbar_style);
     onSidebarStyleChange(PREFERENCE_DEFAULTS.sidebar_variant);
-    onSidebarCollapseModeChange(PREFERENCE_DEFAULTS.sidebar_collapsible);
     onFontChange(PREFERENCE_DEFAULTS.font);
   };
 
@@ -231,25 +215,6 @@ export function LayoutControls() {
                 </ToggleGroupItem>
                 <ToggleGroupItem value="floating" aria-label="Toggle floating">
                   Flotante
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="font-medium text-xs">Colapso lateral</Label>
-              <ToggleGroup
-                size="sm"
-                spacing={0}
-                variant="outline"
-                type="single"
-                value={collapsible}
-                onValueChange={onSidebarCollapseModeChange}
-              >
-                <ToggleGroupItem value="icon" aria-label="Toggle icon">
-                  Icono
-                </ToggleGroupItem>
-                <ToggleGroupItem value="offcanvas" aria-label="Toggle offcanvas">
-                  Oculto
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
