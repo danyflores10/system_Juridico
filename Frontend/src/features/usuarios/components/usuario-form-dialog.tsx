@@ -34,8 +34,8 @@ const esquema = z.object({
   email: z.string().email({ message: "Ingresa un correo electrónico válido." }),
   rol: z.enum(["admin", "usuario"]),
   activo: z.boolean(),
-  password: z.string().refine((valor) => valor === "" || valor.length >= 8, {
-    message: "La contraseña debe tener al menos 8 caracteres.",
+  password: z.string().refine((valor) => valor === "" || valor.length >= 10, {
+    message: "La contraseña debe tener al menos 10 caracteres.",
   }),
 });
 

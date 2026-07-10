@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -43,12 +44,16 @@ class LoginThrottle(AnonRateThrottle):
     scope = 'login'
 
 
+class LoginHourThrottle(AnonRateThrottle):
+    scope = 'login_hour'
+
+
 class LoginView(APIView):
     """Inicio de sesión con correo y contraseña. Devuelve JWT + usuario."""
 
     authentication_classes = []
     permission_classes = [AllowAny]
-    throttle_classes = [LoginThrottle]
+    throttle_classes = [LoginThrottle, LoginHourThrottle]
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
@@ -64,7 +69,7 @@ class RegistroView(APIView):
 
     authentication_classes = []
     permission_classes = [AllowAny]
-    throttle_classes = [LoginThrottle]
+    throttle_classes = [LoginThrottle, LoginHourThrottle]
 
     def post(self, request):
         serializer = RegistroSerializer(data=request.data)
@@ -77,6 +82,27 @@ class RegistroView(APIView):
 
 class RefreshView(TokenRefreshView):
     """Renovación del token de acceso."""
+
+
+class LogoutView(APIView):
+    """Cierra sesión invalidando (blacklist) el refresh token entregado.
+
+    Tras esto, el refresh ya no puede generar nuevos access tokens; el access
+    actual expira por sí solo en pocos minutos.
+    """
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh = request.data.get('refresh')
+        if refresh:
+            try:
+                RefreshToken(refresh).blacklist()
+            except TokenError:
+                # Token ya expirado/ inválido: la sesión igual queda cerrada.
+                pass
+        return Response(status=status.HTTP_205_RESET_CONTENT)
 
 
 class MeView(APIView):

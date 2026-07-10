@@ -29,7 +29,12 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# Hosts permitidos: configurables por entorno (coma-separados) para producción.
+ALLOWED_HOSTS = [
+    h.strip()
+    for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if h.strip()
+]
 
 
 # Application definition
@@ -43,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
     'drf_spectacular',
@@ -102,12 +108,15 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
+PASSWORD_MIN_LENGTH = int(os.getenv('PASSWORD_MIN_LENGTH', '10'))
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': PASSWORD_MIN_LENGTH},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -115,6 +124,16 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+# Hashing de contraseñas: Argon2id primero (ganador del Password Hashing
+# Competition; el más resistente a fuerza bruta con GPU/ASIC). Los hashes
+# antiguos (PBKDF2) se re-cifran a Argon2 automáticamente en el próximo login.
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.ScryptPasswordHasher',
 ]
 
 
@@ -206,9 +225,14 @@ FINAL_STORAGE_ROOT_LENGTH_BUDGET = int(
     os.getenv('FINAL_STORAGE_ROOT_LENGTH_BUDGET', '100')
 )
 
+# Orígenes permitidos para CORS (coma-separados por entorno).
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
+    o.strip()
+    for o in os.getenv(
+        'CORS_ALLOWED_ORIGINS',
+        'http://localhost:3000,http://127.0.0.1:3000',
+    ).split(',')
+    if o.strip()
 ]
 
 REST_FRAMEWORK = {
@@ -227,21 +251,25 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_THROTTLE_RATES': {
-        'login': os.getenv('LOGIN_THROTTLE_RATE', '10/min'),
+        # Protección contra fuerza bruta en autenticación: dos límites combinados.
+        'login': os.getenv('LOGIN_THROTTLE_RATE', '8/min'),
+        'login_hour': os.getenv('LOGIN_THROTTLE_RATE_HOUR', '40/hour'),
     },
 }
 
 from datetime import timedelta  # noqa: E402
 
 SIMPLE_JWT = {
+    # Access de vida corta (el BFF lo renueva de forma transparente con el refresh).
     'ACCESS_TOKEN_LIFETIME': timedelta(
-        minutes=int(os.getenv('JWT_ACCESS_MINUTES', '60'))
+        minutes=int(os.getenv('JWT_ACCESS_MINUTES', '15'))
     ),
     'REFRESH_TOKEN_LIFETIME': timedelta(
         days=int(os.getenv('JWT_REFRESH_DAYS', '7'))
     ),
     'ROTATE_REFRESH_TOKENS': True,
     'UPDATE_LAST_LOGIN': False,
+    'ALGORITHM': 'HS256',
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
@@ -259,3 +287,39 @@ SPECTACULAR_SETTINGS = {
 ALLOW_PRIVATE_SOURCE_URLS = (
     os.getenv('ALLOW_PRIVATE_SOURCE_URLS', 'False').lower() == 'true'
 )
+
+
+# ---------------------------------------------------------------------------
+# Endurecimiento de seguridad
+# ---------------------------------------------------------------------------
+
+# Cabeceras seguras que aplican siempre (también en desarrollo).
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+X_FRAME_OPTIONS = 'DENY'
+SESSION_COOKIE_HTTPONLY = True
+
+# Orígenes de confianza para CSRF (necesario tras un proxy HTTPS en producción).
+CSRF_TRUSTED_ORIGINS = [
+    o.strip()
+    for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
+    if o.strip()
+]
+
+# En producción (DEBUG=False) se fuerza HTTPS y cookies seguras.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = (
+        os.getenv('SECURE_SSL_REDIRECT', 'True').lower() == 'true'
+    )
+    # Detrás de un proxy/balanceador que termina TLS (Nginx, etc.).
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    # HSTS: fuerza HTTPS en el navegador durante 1 año (con subdominios).
+    SECURE_HSTS_SECONDS = int(
+        os.getenv('SECURE_HSTS_SECONDS', str(60 * 60 * 24 * 365))
+    )
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

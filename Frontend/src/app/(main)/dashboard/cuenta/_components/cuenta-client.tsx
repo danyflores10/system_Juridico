@@ -72,7 +72,7 @@ const perfilSchema = z.object({
 const passwordSchema = z
   .object({
     password_actual: z.string().min(1, { message: "Ingresa tu contraseña actual." }),
-    password_nueva: z.string().min(8, { message: "La nueva contraseña debe tener al menos 8 caracteres." }),
+    password_nueva: z.string().min(10, { message: "La nueva contraseña debe tener al menos 10 caracteres." }),
     confirmar: z.string().min(1, { message: "Confirma la nueva contraseña." }),
   })
   .refine((data) => data.password_nueva === data.confirmar, {

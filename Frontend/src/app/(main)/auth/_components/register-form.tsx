@@ -17,8 +17,8 @@ const formSchema = z
   .object({
     nombre: z.string().min(2, { message: "Ingresa tu nombre." }),
     email: z.string().email({ message: "Ingresa un correo electrónico válido." }),
-    password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres." }),
-    confirmPassword: z.string().min(8, { message: "Confirma la contraseña con al menos 8 caracteres." }),
+    password: z.string().min(10, { message: "La contraseña debe tener al menos 10 caracteres." }),
+    confirmPassword: z.string().min(10, { message: "Confirma la contraseña con al menos 10 caracteres." }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden.",
