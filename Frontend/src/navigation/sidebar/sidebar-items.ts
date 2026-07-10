@@ -124,14 +124,12 @@ export const sidebarItems: NavGroup[] = [
         title: "Modificador jurídico",
         url: "/dashboard/modificador",
         icon: FileDiff,
-        badge: "new",
       },
       {
         id: "buscador",
         title: "Buscador jurídico",
         url: "/dashboard/buscador",
         icon: Search,
-        badge: "new",
       },
       {
         id: "crm",
@@ -180,7 +178,6 @@ export const sidebarItems: NavGroup[] = [
         title: "Infraestructura",
         url: "/dashboard/infrastructure",
         icon: Server,
-        badge: "new",
       },
     ],
   },
@@ -217,7 +214,6 @@ export const sidebarItems: NavGroup[] = [
         title: "Tareas",
         url: "/dashboard/tasks",
         icon: CheckSquare,
-        badge: "new",
       },
       {
         id: "invoice",
