@@ -289,6 +289,18 @@ html {
   }
 }
 
+/* Cursor parpadeante del efecto máquina de escribir. */
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
 .disable-transitions * {
   transition: none !important;
 }
