@@ -14,8 +14,10 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.static import serve as static_serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
@@ -30,5 +32,12 @@ urlpatterns = [
         'api/docs/',
         SpectacularSwaggerView.as_view(url_name='schema'),
         name='swagger-ui',
+    ),
+    # Sirve SOLO la carpeta de avatares de forma pública (fotos de perfil).
+    # El resto de private_media no se expone.
+    re_path(
+        r'^media/avatars/(?P<path>.*)$',
+        static_serve,
+        {'document_root': str(settings.MEDIA_ROOT / 'avatars')},
     ),
 ]

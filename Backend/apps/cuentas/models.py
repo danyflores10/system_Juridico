@@ -23,6 +23,7 @@ class PerfilUsuario(models.Model):
     matricula = models.CharField(max_length=80, blank=True, default='')
     especialidad = models.CharField(max_length=120, blank=True, default='')
     bio = models.TextField(blank=True, default='')
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef, useState } from "react";
+
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,6 +9,7 @@ import {
   BadgeCheck,
   Bell,
   CalendarClock,
+  Camera,
   Clock,
   KeyRound,
   Loader2,
@@ -14,13 +17,14 @@ import {
   Save,
   Scale,
   ShieldCheck,
+  Trash2,
   User as UserIcon,
 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,11 +107,63 @@ const notificationPrefs = [
   },
 ];
 
+const TAMANO_MAXIMO_FOTO = 5 * 1024 * 1024; // 5 MB
+
 export function CuentaClient({ perfil }: { readonly perfil: PerfilCompleto }) {
   const router = useRouter();
   const esAdmin = perfil.rol === "admin";
   const rolTexto = esAdmin ? "Administrador" : "Usuario";
   const nombreCompleto = `${perfil.nombre} ${perfil.apellido}`.trim() || perfil.email;
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [procesandoFoto, setProcesandoFoto] = useState(false);
+
+  const onSeleccionarFoto = async (evento: React.ChangeEvent<HTMLInputElement>) => {
+    const archivo = evento.target.files?.[0];
+    evento.target.value = ""; // permite volver a elegir el mismo archivo
+    if (!archivo) return;
+    if (!archivo.type.startsWith("image/")) {
+      toast.error("Archivo no válido", { description: "Selecciona una imagen (JPG, PNG, WEBP o GIF)." });
+      return;
+    }
+    if (archivo.size > TAMANO_MAXIMO_FOTO) {
+      toast.error("Imagen muy grande", { description: "La foto no debe superar los 5 MB." });
+      return;
+    }
+
+    setProcesandoFoto(true);
+    const datosFormulario = new FormData();
+    datosFormulario.append("avatar", archivo);
+    const respuesta = await fetch("/api/backend/auth/perfil/avatar", {
+      method: "POST",
+      body: datosFormulario,
+    }).catch(() => null);
+    setProcesandoFoto(false);
+
+    if (!respuesta) {
+      toast.error("Sin conexión", { description: "No se pudo contactar al servidor." });
+      return;
+    }
+    const datos: unknown = await respuesta.json().catch(() => null);
+    if (!respuesta.ok) {
+      toast.error("No se pudo subir la foto", { description: extraerError(datos, "Intenta con otra imagen.") });
+      return;
+    }
+    toast.success("Foto de perfil actualizada");
+    router.refresh();
+  };
+
+  const quitarFoto = async () => {
+    setProcesandoFoto(true);
+    const respuesta = await fetch("/api/backend/auth/perfil/avatar", { method: "DELETE" }).catch(() => null);
+    setProcesandoFoto(false);
+    if (!respuesta?.ok) {
+      toast.error("No se pudo quitar la foto", { description: "Inténtalo de nuevo." });
+      return;
+    }
+    toast.success("Foto de perfil eliminada");
+    router.refresh();
+  };
 
   const perfilForm = useForm<z.infer<typeof perfilSchema>>({
     resolver: zodResolver(perfilSchema),
@@ -189,11 +245,30 @@ export function CuentaClient({ perfil }: { readonly perfil: PerfilCompleto }) {
         <BadgeCheck className="pointer-events-none absolute -right-6 -bottom-8 size-48 rotate-12 text-white/10" />
         <div className="relative flex flex-col gap-5 p-6 md:flex-row md:items-end md:justify-between md:p-8">
           <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-end sm:text-left">
-            <Avatar className="size-24 rounded-none bg-white/15 ring-4 ring-white/25">
-              <AvatarFallback className="rounded-none bg-transparent font-semibold text-2xl text-white">
-                {getInitials(nombreCompleto)}
-              </AvatarFallback>
-            </Avatar>
+            <div className="group relative">
+              <Avatar className="size-24 rounded-full bg-white/15 ring-4 ring-white/25">
+                {perfil.avatar ? (
+                  <AvatarImage src={perfil.avatar} alt={nombreCompleto} className="rounded-full object-cover" />
+                ) : null}
+                <AvatarFallback className="rounded-full bg-transparent font-semibold text-2xl text-white">
+                  {getInitials(nombreCompleto)}
+                </AvatarFallback>
+              </Avatar>
+              {/* Superposición para cambiar la foto al pasar el cursor */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={procesandoFoto}
+                aria-label="Cambiar foto de perfil"
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/45 opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 disabled:cursor-not-allowed"
+              >
+                {procesandoFoto ? (
+                  <Loader2 className="size-6 animate-spin text-white" />
+                ) : (
+                  <Camera className="size-6 text-white" />
+                )}
+              </button>
+            </div>
             <div className="space-y-1.5">
               <span className="inline-flex items-center gap-2 rounded-none bg-white/15 px-3 py-1 font-medium text-xs uppercase tracking-wide">
                 <BadgeCheck className="size-3.5" /> Mi cuenta
@@ -205,6 +280,38 @@ export function CuentaClient({ perfil }: { readonly perfil: PerfilCompleto }) {
                 <Mail className="size-4" /> {perfil.email}
               </p>
             </div>
+          </div>
+
+          {/* Acciones de foto */}
+          <div className="flex justify-center gap-2 sm:justify-end">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              hidden
+              onChange={onSeleccionarFoto}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={procesandoFoto}
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-white text-[#0e63e0] hover:bg-white/90"
+            >
+              {procesandoFoto ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+              {perfil.avatar ? "Cambiar foto" : "Subir foto"}
+            </Button>
+            {perfil.avatar ? (
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={procesandoFoto}
+                onClick={quitarFoto}
+                className="text-white hover:bg-white/15 hover:text-white"
+              >
+                <Trash2 className="size-4" /> Quitar
+              </Button>
+            ) : null}
           </div>
         </div>
       </section>
@@ -375,9 +482,14 @@ export function CuentaClient({ perfil }: { readonly perfil: PerfilCompleto }) {
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 <div className="flex items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-none bg-muted text-muted-foreground">
-                    <UserIcon className="size-4" />
-                  </span>
+                  <Avatar className="size-9 rounded-full">
+                    {perfil.avatar ? (
+                      <AvatarImage src={perfil.avatar} alt={nombreCompleto} className="rounded-full object-cover" />
+                    ) : null}
+                    <AvatarFallback className="rounded-full bg-muted font-medium text-muted-foreground text-xs">
+                      {getInitials(nombreCompleto)}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="min-w-0">
                     <p className="truncate font-medium">{nombreCompleto}</p>
                     <p className="truncate text-muted-foreground text-xs">{perfil.email}</p>

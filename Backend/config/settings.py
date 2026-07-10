@@ -156,6 +156,9 @@ CELERY_BEAT_SCHEDULE = {
 
 STATIC_URL = 'static/'
 
+# Los avatares se sirven públicamente bajo /media/avatars/ (ver config/urls.py).
+# El resto de private_media permanece privado.
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'private_media'
 MAX_PDF_UPLOAD_SIZE = int(
     os.getenv('MAX_PDF_UPLOAD_SIZE', str(100 * 1024 * 1024))

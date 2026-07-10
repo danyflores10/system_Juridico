@@ -121,19 +121,33 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return instance
 
 
+def _avatar_absoluto(usuario, contexto):
+    """URL absoluta del avatar, o None si no tiene."""
+    perfil = getattr(usuario, 'perfil', None)
+    if not perfil or not perfil.avatar:
+        return None
+    url = perfil.avatar.url
+    request = contexto.get('request') if contexto else None
+    return request.build_absolute_uri(url) if request else url
+
+
 class UsuarioSesionSerializer(serializers.ModelSerializer):
     """Datos mínimos del usuario autenticado para el frontend."""
 
     nombre = serializers.CharField(source='first_name', read_only=True)
     apellido = serializers.CharField(source='last_name', read_only=True)
     rol = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'nombre', 'apellido', 'email', 'rol']
+        fields = ['id', 'nombre', 'apellido', 'email', 'rol', 'avatar']
 
     def get_rol(self, usuario):
         return rol_de(usuario)
+
+    def get_avatar(self, usuario):
+        return _avatar_absoluto(usuario, self.context)
 
 
 class PerfilPropioSerializer(serializers.ModelSerializer):
@@ -151,6 +165,7 @@ class PerfilPropioSerializer(serializers.ModelSerializer):
         source='perfil.especialidad', max_length=120, allow_blank=True, required=False
     )
     bio = serializers.CharField(source='perfil.bio', allow_blank=True, required=False)
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -167,11 +182,15 @@ class PerfilPropioSerializer(serializers.ModelSerializer):
             'matricula',
             'especialidad',
             'bio',
+            'avatar',
         ]
         read_only_fields = ['id']
 
     def get_rol(self, usuario):
         return rol_de(usuario)
+
+    def get_avatar(self, usuario):
+        return _avatar_absoluto(usuario, self.context)
 
     def validate_email(self, value):
         return _validar_email_unico(value, usuario_actual=self.instance)

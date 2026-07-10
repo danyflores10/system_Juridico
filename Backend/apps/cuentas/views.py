@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from PIL import Image
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
@@ -29,9 +31,10 @@ def _tokens_para(usuario):
     return {'access': str(refresh.access_token), 'refresh': str(refresh)}
 
 
-def _respuesta_sesion(usuario):
+def _respuesta_sesion(usuario, request=None):
+    contexto = {'request': request} if request else {}
     return {
-        'usuario': UsuarioSesionSerializer(usuario).data,
+        'usuario': UsuarioSesionSerializer(usuario, context=contexto).data,
         'tokens': _tokens_para(usuario),
     }
 
@@ -53,7 +56,7 @@ class LoginView(APIView):
         usuario = serializer.validated_data['usuario']
         usuario.last_login = timezone.now()
         usuario.save(update_fields=['last_login'])
-        return Response(_respuesta_sesion(usuario))
+        return Response(_respuesta_sesion(usuario, request))
 
 
 class RegistroView(APIView):
@@ -69,7 +72,7 @@ class RegistroView(APIView):
         usuario = serializer.save()
         usuario.last_login = timezone.now()
         usuario.save(update_fields=['last_login'])
-        return Response(_respuesta_sesion(usuario), status=status.HTTP_201_CREATED)
+        return Response(_respuesta_sesion(usuario, request), status=status.HTTP_201_CREATED)
 
 
 class RefreshView(TokenRefreshView):
@@ -82,7 +85,7 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response(UsuarioSesionSerializer(request.user).data)
+        return Response(UsuarioSesionSerializer(request.user, context={'request': request}).data)
 
 
 class PerfilPropioView(APIView):
@@ -92,14 +95,66 @@ class PerfilPropioView(APIView):
 
     def get(self, request):
         PerfilUsuario.objects.get_or_create(usuario=request.user)
-        return Response(PerfilPropioSerializer(request.user).data)
+        return Response(PerfilPropioSerializer(request.user, context={'request': request}).data)
 
     def patch(self, request):
         PerfilUsuario.objects.get_or_create(usuario=request.user)
-        serializer = PerfilPropioSerializer(request.user, data=request.data, partial=True)
+        serializer = PerfilPropioSerializer(
+            request.user, data=request.data, partial=True, context={'request': request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+class AvatarView(APIView):
+    """Sube o elimina la foto de perfil del usuario autenticado."""
+
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    TIPOS_PERMITIDOS = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
+    TAMANO_MAXIMO = 5 * 1024 * 1024  # 5 MB
+
+    def post(self, request):
+        archivo = request.FILES.get('avatar')
+        if archivo is None:
+            return Response(
+                {'detail': 'No se envió ninguna imagen.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if archivo.size > self.TAMANO_MAXIMO:
+            return Response(
+                {'detail': 'La imagen no debe superar los 5 MB.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if archivo.content_type not in self.TIPOS_PERMITIDOS:
+            return Response(
+                {'detail': 'Formato no permitido. Usa una imagen JPG, PNG, WEBP o GIF.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Verifica que el contenido sea realmente una imagen válida.
+        try:
+            Image.open(archivo).verify()
+        except Exception:
+            return Response(
+                {'detail': 'El archivo no es una imagen válida.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        archivo.seek(0)
+
+        perfil, _ = PerfilUsuario.objects.get_or_create(usuario=request.user)
+        if perfil.avatar:
+            perfil.avatar.delete(save=False)
+        perfil.avatar = archivo
+        perfil.save()
+        return Response(PerfilPropioSerializer(request.user, context={'request': request}).data)
+
+    def delete(self, request):
+        perfil, _ = PerfilUsuario.objects.get_or_create(usuario=request.user)
+        if perfil.avatar:
+            perfil.avatar.delete(save=True)
+        return Response(PerfilPropioSerializer(request.user, context={'request': request}).data)
 
 
 class CambiarPasswordView(APIView):

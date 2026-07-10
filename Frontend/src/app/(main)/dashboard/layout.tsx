@@ -24,7 +24,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
     id: String(sesion.id),
     name: `${sesion.nombre} ${sesion.apellido}`.trim() || sesion.email,
     email: sesion.email,
-    avatar: "",
+    avatar: sesion.avatar ?? "",
     role: sesion.rol === "admin" ? "Administrador" : "Usuario",
     esAdmin: sesion.rol === "admin",
   };

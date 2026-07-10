@@ -9,6 +9,7 @@ export interface SesionUsuario {
   apellido: string;
   email: string;
   rol: "admin" | "usuario";
+  avatar: string | null;
 }
 
 export interface TokensSesion {

@@ -19,7 +19,11 @@ async function manejar(request: NextRequest, { params }: { params: Promise<{ pat
   }
 
   const url = `${getDjangoBaseUrl()}/${destino}/${request.nextUrl.search}`;
-  const cuerpo = ["GET", "HEAD"].includes(request.method) ? undefined : await request.text();
+  // Reenvía el cuerpo tal cual (JSON o multipart/form-data para subir imágenes),
+  // conservando el Content-Type original con su boundary.
+  const tieneCuerpo = !["GET", "HEAD"].includes(request.method);
+  const cuerpo = tieneCuerpo ? await request.arrayBuffer() : undefined;
+  const contentType = request.headers.get("content-type");
 
   const ejecutar = async (token: string) =>
     fetch(url, {
@@ -27,9 +31,9 @@ async function manejar(request: NextRequest, { params }: { params: Promise<{ pat
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
-        ...(cuerpo ? { "Content-Type": "application/json" } : {}),
+        ...(contentType ? { "Content-Type": contentType } : {}),
       },
-      body: cuerpo || undefined,
+      body: cuerpo,
       cache: "no-store",
     });
 
