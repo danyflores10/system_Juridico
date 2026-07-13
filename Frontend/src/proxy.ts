@@ -16,7 +16,7 @@ const OPCIONES_COOKIE = {
   path: "/",
 } as const;
 
-const RUTAS_SOLO_ADMIN = [/^\/dashboard\/users/, /^\/dashboard\/roles/];
+const RUTAS_SOLO_ADMIN = [/^\/dashboard\/users/, /^\/dashboard\/roles/, /^\/dashboard\/suscriptores/];
 
 interface CargaJwt {
   exp?: number;

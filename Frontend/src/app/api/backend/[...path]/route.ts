@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { ACCESS_COOKIE, cookieOptions, getDjangoBaseUrl, REFRESH_COOKIE, renovarTokens } from "@/server/auth/session";
 
 // Prefijos del API de Django que este proxy autenticado puede alcanzar.
-const PREFIJOS_PERMITIDOS = ["usuarios", "auth/perfil", "auth/cambiar-password"];
+const PREFIJOS_PERMITIDOS = ["usuarios", "auth/perfil", "auth/cambiar-password", "suscripciones/admin"];
 
 async function manejar(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params;

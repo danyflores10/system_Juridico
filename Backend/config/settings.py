@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'apps.fuentes.apps.FuentesConfig',
     'apps.normativa.apps.NormativaConfig',
     'apps.modificador.apps.ModificadorConfig',
+    'apps.suscripciones.apps.SuscripcionesConfig',
 ]
 
 MIDDLEWARE = [
@@ -140,9 +141,11 @@ PASSWORD_HASHERS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# Español: los mensajes de validación (p. ej. "Esta contraseña es demasiado
+# común.") llegan traducidos al usuario final.
+LANGUAGE_CODE = 'es'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/La_Paz'
 
 USE_I18N = True
 
@@ -254,6 +257,10 @@ REST_FRAMEWORK = {
         # Protección contra fuerza bruta en autenticación: dos límites combinados.
         'login': os.getenv('LOGIN_THROTTLE_RATE', '8/min'),
         'login_hour': os.getenv('LOGIN_THROTTLE_RATE_HOUR', '40/hour'),
+        # Módulo de pagos: evita abuso del checkout público y del sondeo
+        # de estado desde la página de retorno.
+        'checkout': os.getenv('CHECKOUT_THROTTLE_RATE', '10/min'),
+        'estado_pago': os.getenv('ESTADO_PAGO_THROTTLE_RATE', '30/min'),
     },
 }
 
@@ -287,6 +294,25 @@ SPECTACULAR_SETTINGS = {
 ALLOW_PRIVATE_SOURCE_URLS = (
     os.getenv('ALLOW_PRIVATE_SOURCE_URLS', 'False').lower() == 'true'
 )
+
+
+# ---------------------------------------------------------------------------
+# Pasarela de pagos Libélula (Módulo 3: Gestión de Pagos y Facturación)
+# ---------------------------------------------------------------------------
+
+# Appkey privado asignado por Libélula (llave de pruebas o de producción).
+LIBELULA_APPKEY = os.getenv('LIBELULA_APPKEY', '')
+LIBELULA_API_BASE = os.getenv('LIBELULA_API_BASE', 'https://api.libelula.bo')
+LIBELULA_TIMEOUT = int(os.getenv('LIBELULA_TIMEOUT', '30'))
+# La emisión de factura vía Libélula/SIAT se activará cuando el comercio
+# tenga habilitada su modalidad de facturación (Fase de facturación).
+LIBELULA_EMITE_FACTURA = (
+    os.getenv('LIBELULA_EMITE_FACTURA', 'False').lower() == 'true'
+)
+# URLs públicas usadas para construir callback_url (backend) y
+# url_retorno (frontend) al registrar deudas.
+BACKEND_PUBLIC_URL = os.getenv('BACKEND_PUBLIC_URL', 'http://localhost:8000')
+FRONTEND_PUBLIC_URL = os.getenv('FRONTEND_PUBLIC_URL', 'http://localhost:3000')
 
 
 # ---------------------------------------------------------------------------

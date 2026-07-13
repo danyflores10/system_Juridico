@@ -4,6 +4,7 @@ import {
   ChartBar,
   CheckSquare,
   ClipboardCheck,
+  CreditCard,
   FileDiff,
   FileText,
   Fingerprint,
@@ -136,6 +137,13 @@ export const sidebarItems: NavGroup[] = [
         title: "Usuarios",
         url: "/dashboard/users",
         icon: Users,
+        adminOnly: true,
+      },
+      {
+        id: "subscribers",
+        title: "Suscriptores",
+        url: "/dashboard/suscriptores",
+        icon: CreditCard,
         adminOnly: true,
       },
       {

@@ -266,6 +266,11 @@ class CambiarPasswordSerializer(serializers.Serializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(style={'input_type': 'password'})
+    # Identificador del dispositivo (cookie httpOnly emitida por el BFF).
+    # Requerido solo para cuentas habilitadas por una suscripción.
+    device_id = serializers.CharField(
+        required=False, allow_blank=True, default=''
+    )
 
     default_error_messages = {
         'credenciales': 'Correo o contraseña incorrectos.',
@@ -280,6 +285,25 @@ class LoginSerializer(serializers.Serializer):
             self.fail('credenciales')
         if not usuario.is_active:
             self.fail('inactivo')
+
+        # Regla del módulo de suscripciones: cada usuario y contraseña
+        # habilita 1 solo dispositivo (el primero que inicia sesión).
+        from apps.suscripciones.services import (
+            DispositivoNoAutorizado,
+            validar_dispositivo,
+        )
+
+        request = self.context.get('request')
+        user_agent = (
+            request.META.get('HTTP_USER_AGENT', '') if request else ''
+        )
+        try:
+            validar_dispositivo(
+                usuario, attrs.get('device_id'), user_agent
+            )
+        except DispositivoNoAutorizado as exc:
+            raise serializers.ValidationError(str(exc))
+
         attrs['usuario'] = usuario
         return attrs
 
