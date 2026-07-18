@@ -813,6 +813,72 @@ class DocumentosNormativosTests(APITestCase):
         self.assertEqual(descarga_pdf.status_code, status.HTTP_200_OK)
         self.assertEqual(descarga_pdf['Content-Type'], 'application/pdf')
 
+    def _simular_conversion_legada_sin_pdf(self, documento):
+        """Deja la conversión como los registros previos al PDF de consulta."""
+        resultado = documento.resultado_conversion
+        resultado.archivo_pdf.storage.delete(resultado.archivo_pdf.name)
+        resultado.archivo_pdf = None
+        resultado.nombre_archivo_pdf = ''
+        resultado.ruta_pdf_relativa = ''
+        resultado.hash_pdf_sha256 = ''
+        resultado.tamano_pdf_bytes = 0
+        resultado.pdf_texto_buscable = False
+        resultado.save()
+        return resultado
+
+    def test_resultado_conversion_repara_pdf_consulta_faltante(self):
+        documento = self.preparar_para_conversion()
+        convertir_documento_final(documento.pk)
+        self._simular_conversion_legada_sin_pdf(documento)
+
+        response = self.client.get(
+            reverse('documento-resultado-conversion', kwargs={'uuid': documento.uuid})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['archivo_pdf_url'].endswith('/archivo-pdf-consulta/'))
+        resultado = documento.resultado_conversion
+        resultado.refresh_from_db()
+        self.assertTrue(resultado.archivo_pdf)
+        self.assertTrue(resultado.archivo_pdf.storage.exists(resultado.archivo_pdf.name))
+        self.assertEqual(Path(resultado.nombre_archivo).stem, Path(resultado.nombre_archivo_pdf).stem)
+        self.assertGreater(resultado.tamano_pdf_bytes, 0)
+        self.assertEqual(
+            resultado.detalles_tecnicos['pdf_consulta_fuente'],
+            ArchivoDocumento.TipoArchivo.PDF_PROCESADO,
+        )
+
+    def test_descarga_pdf_consulta_se_regenera_si_falta(self):
+        documento = self.preparar_para_conversion()
+        convertir_documento_final(documento.pk)
+        self._simular_conversion_legada_sin_pdf(documento)
+
+        descarga = self.client.get(
+            reverse('documento-archivo-pdf-consulta', kwargs={'uuid': documento.uuid})
+        )
+
+        self.assertEqual(descarga.status_code, status.HTTP_200_OK)
+        self.assertEqual(descarga['Content-Type'], 'application/pdf')
+
+    def test_pdf_consulta_sin_fuente_no_rompe_la_consulta(self):
+        documento = self.preparar_para_conversion()
+        convertir_documento_final(documento.pk)
+        self._simular_conversion_legada_sin_pdf(documento)
+        for archivo in documento.archivos.all():
+            archivo.archivo.delete(save=False)
+        documento.archivos.all().delete()
+
+        response = self.client.get(
+            reverse('documento-resultado-conversion', kwargs={'uuid': documento.uuid})
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data['archivo_pdf_url'])
+
+        descarga = self.client.get(
+            reverse('documento-archivo-pdf-consulta', kwargs={'uuid': documento.uuid})
+        )
+        self.assertEqual(descarga.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_descarga_word_faltante_responde_404_sin_exponer_error(self):
         documento = self.preparar_para_conversion()
         ResultadoConversion.objects.create(

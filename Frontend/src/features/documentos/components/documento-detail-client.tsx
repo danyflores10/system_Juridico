@@ -211,9 +211,12 @@ export function DocumentoDetailClient({ uuid }: { uuid: string }) {
                   <Download /> Descargar versión Word
                 </a>
               ) : (
-                <>
-                  <LoaderCircle className="animate-spin" /> Preparando descarga
-                </>
+                <DownloadFallback
+                  pending={conversionQuery.isPending}
+                  pendingLabel="Preparando descarga"
+                  unavailableLabel="Word no disponible"
+                  icon={Download}
+                />
               )}
             </Button>
           ) : null}
@@ -224,9 +227,12 @@ export function DocumentoDetailClient({ uuid }: { uuid: string }) {
                   <FileText /> Descargar PDF consultable
                 </a>
               ) : (
-                <>
-                  <LoaderCircle className="animate-spin" /> Preparando PDF
-                </>
+                <DownloadFallback
+                  pending={conversionQuery.isPending}
+                  pendingLabel="Preparando PDF"
+                  unavailableLabel="PDF no disponible"
+                  icon={FileText}
+                />
               )}
             </Button>
           ) : null}
@@ -326,6 +332,31 @@ export function DocumentoDetailClient({ uuid }: { uuid: string }) {
 
       <PdfSourceViewer url={document.archivo_original_url} title={legalHeading} />
     </div>
+  );
+}
+
+function DownloadFallback({
+  pending,
+  pendingLabel,
+  unavailableLabel,
+  icon: Icon,
+}: {
+  pending: boolean;
+  pendingLabel: string;
+  unavailableLabel: string;
+  icon: typeof Download;
+}) {
+  if (pending) {
+    return (
+      <>
+        <LoaderCircle className="animate-spin" /> {pendingLabel}
+      </>
+    );
+  }
+  return (
+    <>
+      <Icon /> {unavailableLabel}
+    </>
   );
 }
 

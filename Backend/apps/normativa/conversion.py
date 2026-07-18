@@ -573,3 +573,116 @@ def convertir_documento_final(documento_id):
         )
         _marcar_error(documento_id, error, inicio)
         raise error from exc
+
+
+def asegurar_pdf_consulta(resultado):
+    """Garantiza que una conversión completada tenga su PDF de consulta.
+
+    Las conversiones creadas antes de que existiera el PDF de consulta solo
+    guardaron el Word final. Esta función crea el PDF faltante copiando el
+    PDF fuente (procesado, o el original como respaldo) con la misma
+    nomenclatura del Word. Devuelve True si creó o adoptó el archivo y False
+    si no había nada que hacer.
+    """
+    if resultado.estado != ResultadoConversion.Estado.COMPLETADA:
+        return False
+    if not resultado.archivo or not resultado.nombre_archivo:
+        return False
+    storage = resultado._meta.get_field('archivo_pdf').storage
+    if resultado.archivo_pdf and storage.exists(resultado.archivo_pdf.name):
+        return False
+
+    with transaction.atomic():
+        bloqueado = (
+            ResultadoConversion.objects.select_for_update(of=('self',))
+            .select_related('documento__materia')
+            .get(pk=resultado.pk)
+        )
+        if bloqueado.archivo_pdf and storage.exists(bloqueado.archivo_pdf.name):
+            resultado.refresh_from_db()
+            return False
+
+        fuente = bloqueado.documento.archivos.filter(
+            tipo_archivo=ArchivoDocumento.TipoArchivo.PDF_PROCESADO,
+        ).first() or bloqueado.documento.archivos.filter(
+            tipo_archivo=ArchivoDocumento.TipoArchivo.PDF_ORIGINAL,
+        ).first()
+        if fuente is None or not fuente.archivo:
+            raise ErrorConversion(
+                'PDF_CONSULTA_SIN_FUENTE',
+                'El documento no tiene un PDF fuente para crear el PDF de consulta.',
+            )
+
+        carpeta = bloqueado.carpeta_materia or _limpiar_componente(
+            bloqueado.documento.materia.carpeta_destino if bloqueado.documento.materia_id else '',
+        )
+        if not carpeta:
+            raise ErrorConversion(
+                'CARPETA_INVALIDA',
+                'La conversión no tiene una carpeta final válida para el PDF de consulta.',
+            )
+        nombre_pdf = f'{Path(bloqueado.nombre_archivo).stem}.pdf'
+        ruta_destino = f'{carpeta}/{nombre_pdf}'
+
+        archivo_creado = False
+        nombre_guardado = ruta_destino
+        with tempfile.TemporaryDirectory(prefix='pdf-consulta-') as temporal:
+            copia = Path(temporal) / 'consulta.pdf'
+            with fuente.archivo.open('rb') as origen, copia.open('wb') as destino:
+                shutil.copyfileobj(origen, destino)
+            hash_pdf = _hash_archivo(copia)
+            tamano_pdf = copia.stat().st_size
+            texto_buscable = _pdf_tiene_texto_buscable(copia)
+
+            if storage.exists(ruta_destino):
+                digest = hashlib.sha256()
+                with storage.open(ruta_destino, 'rb') as existente:
+                    for bloque in iter(lambda: existente.read(1024 * 1024), b''):
+                        digest.update(bloque)
+                if digest.hexdigest() != hash_pdf:
+                    raise ErrorConversion(
+                        'PDF_CONSULTA_CONFLICTO',
+                        'Ya existe otro PDF distinto con la nomenclatura final.',
+                    )
+            else:
+                with copia.open('rb') as contenido:
+                    nombre_guardado = storage.save(
+                        ruta_destino,
+                        File(contenido, name=nombre_pdf),
+                    )
+                archivo_creado = True
+                if nombre_guardado != ruta_destino:
+                    storage.delete(nombre_guardado)
+                    raise ErrorConversion(
+                        'PDF_CONSULTA_NOMBRE_OCUPADO',
+                        'No se pudo reservar el mismo nombre para Word y PDF.',
+                    )
+
+        try:
+            detalles = dict(bloqueado.detalles_tecnicos or {})
+            detalles['pdf_consulta_fuente'] = fuente.tipo_archivo
+            detalles['pdf_consulta_texto_buscable'] = texto_buscable
+            bloqueado.archivo_pdf.name = nombre_guardado
+            bloqueado.nombre_archivo_pdf = nombre_pdf
+            bloqueado.ruta_pdf_relativa = nombre_guardado
+            bloqueado.hash_pdf_sha256 = hash_pdf
+            bloqueado.tamano_pdf_bytes = tamano_pdf
+            bloqueado.pdf_texto_buscable = texto_buscable
+            bloqueado.detalles_tecnicos = detalles
+            bloqueado.save(update_fields=(
+                'archivo_pdf',
+                'nombre_archivo_pdf',
+                'ruta_pdf_relativa',
+                'hash_pdf_sha256',
+                'tamano_pdf_bytes',
+                'pdf_texto_buscable',
+                'detalles_tecnicos',
+                'updated_at',
+            ))
+        except Exception:
+            if archivo_creado:
+                storage.delete(nombre_guardado)
+            raise
+
+    resultado.refresh_from_db()
+    return True

@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import F, OuterRef, Q, Subquery
 from django.conf import settings
 from django.http import FileResponse
@@ -9,6 +11,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from kombu.exceptions import OperationalError
 
+from .conversion import ErrorConversion, asegurar_pdf_consulta
 from .filters import DocumentoFilter, HistorialDocumentoFilter
 from .models import (
     ArchivoDocumento,
@@ -48,6 +51,26 @@ from .tasks import (
     encolar_extraccion,
     encolar_procesamiento,
 )
+
+logger = logging.getLogger(__name__)
+
+
+def _autocompletar_pdf_consulta(resultado):
+    """Crea el PDF de consulta faltante sin romper la consulta si falla."""
+    try:
+        return asegurar_pdf_consulta(resultado)
+    except ErrorConversion as exc:
+        logger.warning(
+            'No se pudo crear el PDF de consulta de %s: %s',
+            resultado.documento.codigo_interno,
+            exc.mensaje,
+        )
+    except Exception:
+        logger.exception(
+            'Error inesperado creando el PDF de consulta de %s.',
+            resultado.documento.codigo_interno,
+        )
+    return False
 
 
 class DocumentoViewSet(viewsets.ReadOnlyModelViewSet):
@@ -503,6 +526,7 @@ class DocumentoViewSet(viewsets.ReadOnlyModelViewSet):
                 {'detail': 'El documento todavía no tiene conversión final.'},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        _autocompletar_pdf_consulta(resultado)
         return Response(
             ResultadoConversionDetailSerializer(
                 resultado,
@@ -542,6 +566,8 @@ class DocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             resultado = self.get_object().resultado_conversion
         except ResultadoConversion.DoesNotExist:
             resultado = None
+        if resultado:
+            _autocompletar_pdf_consulta(resultado)
         if not resultado or not resultado.archivo_pdf:
             return Response(
                 {'detail': 'El documento todavía no tiene un PDF de consulta final.'},

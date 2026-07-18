@@ -204,3 +204,60 @@ html:has(.lj-landing) {
   overflow: hidden;
   transition: height 0.3s ease;
 }
+
+/* ===== Sección de planes (rediseño premium negro y dorado) ===== */
+
+/* Respiración lenta del resplandor dorado del plan destacado (anima solo opacity) */
+@keyframes lj-pricing-breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.lj-pricing-breathe {
+  animation: lj-pricing-breathe 5.5s ease-in-out infinite;
+}
+
+/* Brillo que se desplaza sobre el botón dorado al pasar el mouse (anima solo transform) */
+.lj-btn-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent 15%, rgba(255, 255, 255, 0.4) 50%, transparent 85%);
+  transform: skewX(-18deg) translateX(0);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+}
+
+.lj-btn-shine:hover::after,
+.lj-btn-shine:focus-visible::after {
+  transform: skewX(-18deg) translateX(420%);
+}
+
+/* Accesibilidad: sin animaciones decorativas si el usuario reduce el movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .lj-pricing-breathe {
+    animation: none;
+    opacity: 0.55;
+  }
+
+  .lj-btn-shine::after {
+    display: none;
+  }
+
+  .lj-border-beam {
+    animation: none;
+  }
+
+  .lj-marquee {
+    animation: none;
+  }
+}
