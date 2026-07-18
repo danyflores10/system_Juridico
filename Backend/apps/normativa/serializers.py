@@ -212,7 +212,9 @@ class ResultadoConversionResumenSerializer(serializers.ModelSerializer):
         fields = (
             'estado', 'estado_display', 'tarea_id', 'nomenclatura_completa',
             'nombre_archivo', 'carpeta_materia', 'ruta_relativa',
-            'hash_sha256', 'tamano_bytes', 'version', 'intentos',
+            'hash_sha256', 'tamano_bytes', 'nombre_archivo_pdf',
+            'ruta_pdf_relativa', 'hash_pdf_sha256', 'tamano_pdf_bytes',
+            'pdf_texto_buscable', 'version', 'intentos',
             'iniciado_at', 'finalizado_at', 'duracion_ms', 'error_codigo',
             'error_mensaje', 'updated_at',
         )
@@ -220,10 +222,11 @@ class ResultadoConversionResumenSerializer(serializers.ModelSerializer):
 
 class ResultadoConversionDetailSerializer(ResultadoConversionResumenSerializer):
     archivo_url = serializers.SerializerMethodField()
+    archivo_pdf_url = serializers.SerializerMethodField()
 
     class Meta(ResultadoConversionResumenSerializer.Meta):
         fields = ResultadoConversionResumenSerializer.Meta.fields + (
-            'detalles_tecnicos', 'archivo_url',
+            'detalles_tecnicos', 'archivo_url', 'archivo_pdf_url',
         )
 
     def get_archivo_url(self, obj):
@@ -235,6 +238,41 @@ class ResultadoConversionDetailSerializer(ResultadoConversionResumenSerializer):
             kwargs={'uuid': obj.documento.uuid},
         )
         return request.build_absolute_uri(url) if request else url
+
+    def get_archivo_pdf_url(self, obj):
+        if not obj.archivo_pdf:
+            return None
+        request = self.context.get('request')
+        url = reverse(
+            'documento-archivo-pdf-consulta',
+            kwargs={'uuid': obj.documento.uuid},
+        )
+        return request.build_absolute_uri(url) if request else url
+
+
+class ArchivoJuridicoFinalizadoSerializer(serializers.ModelSerializer):
+    tipo_norma = CatalogoPropuestoSerializer(read_only=True)
+    efecto_normativo = CatalogoPropuestoSerializer(read_only=True)
+    materia = CatalogoPropuestoSerializer(read_only=True)
+    conversion = ResultadoConversionDetailSerializer(
+        source='resultado_conversion',
+        read_only=True,
+    )
+    fecha_finalizacion = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Documento
+        fields = (
+            'id', 'uuid', 'codigo_interno', 'tipo_norma',
+            'efecto_normativo', 'materia', 'numero', 'fecha_emision',
+            'titulo', 'objeto_resumido', 'fecha_finalizacion', 'conversion',
+        )
+
+    def get_fecha_finalizacion(self, obj):
+        fecha_anotada = getattr(obj, 'fecha_finalizacion', None)
+        if fecha_anotada:
+            return fecha_anotada
+        return obj.resultado_conversion.finalizado_at
 
 
 class DocumentoListSerializer(serializers.ModelSerializer):
@@ -490,7 +528,8 @@ class DocumentoRevisionDetailSerializer(serializers.ModelSerializer):
             'tipo_origen_display', 'estado', 'estado_display',
             'nombre_archivo', 'archivo_original_url', 'fecha_recepcion',
             'tipo_norma', 'efecto_normativo', 'materia', 'entidad_emisora',
-            'numero', 'fecha_emision', 'titulo', 'objeto', 'observaciones',
+            'numero', 'fecha_emision', 'titulo', 'objeto',
+            'titulo_archivo', 'objeto_resumido', 'observaciones',
             'propuesta', 'calidad', 'historial', 'origenes', 'revisiones',
         )
 
@@ -536,6 +575,8 @@ class AprobarRevisionInputSerializer(serializers.Serializer):
     fecha_emision = serializers.DateField(required=False, allow_null=True)
     titulo = serializers.CharField(max_length=500)
     objeto = serializers.CharField()
+    titulo_archivo = serializers.CharField(max_length=120)
+    objeto_resumido = serializers.CharField(max_length=200)
     observaciones = serializers.CharField(required=False, allow_blank=True)
     observaciones_revision = serializers.CharField(
         required=False,

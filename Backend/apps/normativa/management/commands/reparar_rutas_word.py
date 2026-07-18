@@ -57,9 +57,12 @@ class Command(BaseCommand):
             safe_path = _ruta_compatible(old_path)
             source_exists = os.path.isfile(safe_path)
             normal_access = result.archivo.storage.exists(old_name)
-            _, safe_name, _ = generar_nomenclatura_final(result.documento)
+            nomenclatura, safe_name, _ = generar_nomenclatura_final(result.documento)
             needs_repair = not normal_access or Path(old_name).name != safe_name
             if not needs_repair:
+                if result.nomenclatura_completa != nomenclatura and not options['dry_run']:
+                    result.nomenclatura_completa = nomenclatura
+                    result.save(update_fields=('nomenclatura_completa', 'updated_at'))
                 skipped += 1
                 continue
             if not source_exists:
@@ -112,6 +115,7 @@ class Command(BaseCommand):
                     details['ruta_anterior_resguardada'] = old_name
                     details['ruta_reparada'] = True
                     locked.archivo.name = saved_name
+                    locked.nomenclatura_completa = nomenclatura
                     locked.nombre_archivo = Path(saved_name).name
                     locked.ruta_relativa = saved_name
                     locked.hash_sha256 = copied_hash
@@ -119,7 +123,7 @@ class Command(BaseCommand):
                     locked.version = version
                     locked.detalles_tecnicos = details
                     locked.save(update_fields=(
-                        'archivo', 'nombre_archivo', 'ruta_relativa',
+                        'archivo', 'nomenclatura_completa', 'nombre_archivo', 'ruta_relativa',
                         'hash_sha256', 'tamano_bytes', 'version',
                         'detalles_tecnicos', 'updated_at',
                     ))

@@ -321,13 +321,22 @@ function CompletedConversion({ conversion }: { conversion: ResultadoConversion }
               : "Guardado correctamente y listo para su uso jurídico."}
           </p>
         </div>
-        {conversion.archivo_url ? (
-          <Button size="lg" asChild>
-            <a href={conversion.archivo_url}>
-              <Download /> Descargar Word
-            </a>
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          {conversion.archivo_url ? (
+            <Button size="lg" asChild>
+              <a href={conversion.archivo_url}>
+                <Download /> Descargar Word
+              </a>
+            </Button>
+          ) : null}
+          {conversion.archivo_pdf_url ? (
+            <Button size="lg" variant="outline" className="bg-background text-foreground" asChild>
+              <a href={conversion.archivo_pdf_url}>
+                <FileText /> Descargar PDF
+              </a>
+            </Button>
+          ) : null}
+        </div>
       </div>
       <div className="grid gap-0 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.6fr)]">
         <div className="p-6">

@@ -11,6 +11,7 @@ import {
   Check,
   ClipboardCheck,
   ExternalLink,
+  FileOutput,
   Gavel,
   History,
   RotateCcw,
@@ -61,10 +62,19 @@ type ReviewForm = {
   fecha_emision: string;
   titulo: string;
   objeto: string;
+  titulo_archivo: string;
+  objeto_resumido: string;
   observaciones: string;
   observaciones_revision: string;
 };
 type AlertChoice = { decision: "RESUELTA" | "IGNORADA" | ""; justificacion: string };
+type CatalogOption = {
+  id: number;
+  nombre?: unknown;
+  codigo?: unknown;
+  abreviatura_archivo?: unknown;
+  carpeta_destino?: unknown;
+};
 
 const emptyForm: ReviewForm = {
   tipo_norma: "",
@@ -75,9 +85,33 @@ const emptyForm: ReviewForm = {
   fecha_emision: "",
   titulo: "",
   objeto: "",
+  titulo_archivo: "",
+  objeto_resumido: "",
   observaciones: "",
   observaciones_revision: "",
 };
+
+function shortenAtWord(value: string, limit: number) {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (normalized.length <= limit) return normalized;
+  const words = normalized.split(" ");
+  const selected: string[] = [];
+  let length = 0;
+  for (const word of words) {
+    const extra = word.length + (selected.length ? 1 : 0);
+    if (length + extra > limit) break;
+    selected.push(word);
+    length += extra;
+  }
+  return selected.join(" ");
+}
+
+function initialBrief(value: string, limit: number) {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  const sentenceEnd = normalized.search(/[.!?](?:\s|$)/);
+  const firstSentence = sentenceEnd >= 0 ? normalized.slice(0, sentenceEnd + 1) : normalized;
+  return shortenAtWord(firstSentence, limit);
+}
 
 function initialForm(data: DocumentoRevision): ReviewForm {
   const proposal = data.propuesta;
@@ -90,6 +124,8 @@ function initialForm(data: DocumentoRevision): ReviewForm {
     fecha_emision: data.fecha_emision ?? proposal.fecha_emision_propuesta ?? "",
     titulo: data.titulo || proposal.titulo_propuesto || "",
     objeto: data.objeto || proposal.objeto_propuesto || "",
+    titulo_archivo: data.titulo_archivo || initialBrief(data.titulo || proposal.titulo_propuesto || "", 80),
+    objeto_resumido: data.objeto_resumido || initialBrief(data.objeto || proposal.objeto_propuesto || "", 120),
     observaciones: data.observaciones || "",
     observaciones_revision: "",
   };
@@ -98,6 +134,60 @@ function initialForm(data: DocumentoRevision): ReviewForm {
 function confidence(value: string | null) {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? Math.round(parsed * (parsed <= 1 ? 100 : 1)) : 0;
+}
+
+function cleanFilePart(value: string) {
+  return value
+    .replace(/[<>:"/\\|?*]/g, " ")
+    .replaceAll(";", ",")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[.,; ]+$/, "");
+}
+
+function buildFilenamePreview(
+  form: ReviewForm,
+  tipos: CatalogOption[],
+  efectos: CatalogOption[],
+  materias: CatalogOption[],
+) {
+  const type = tipos.find((item) => String(item.id) === form.tipo_norma);
+  const effect = efectos.find((item) => String(item.id) === form.efecto_normativo);
+  const matter = materias.find((item) => String(item.id) === form.materia);
+  const dateParts = form.fecha_emision.split("-");
+  const formattedDate = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : "Fecha";
+  const matterName = String(matter?.nombre || "Materia");
+  const folder = cleanFilePart(String(matter?.carpeta_destino || matterName));
+  const parts = [
+    cleanFilePart(String(effect?.abreviatura_archivo || effect?.codigo || "Efecto")),
+    cleanFilePart(String(type?.abreviatura_archivo || type?.codigo || "Tipo")),
+    cleanFilePart(form.numero || "Número"),
+    formattedDate,
+    cleanFilePart(form.titulo_archivo || "Título breve"),
+    cleanFilePart(form.objeto_resumido || "Objeto resumido"),
+    cleanFilePart(matterName),
+  ];
+  const maxLength = Math.min(230, 240 - 100 - folder.length - 2);
+  let filename = `${parts.join("; ")}.docx`;
+  const original = filename;
+  for (const [index, minimum] of [
+    [5, 18],
+    [4, 15],
+    [6, 15],
+    [2, 4],
+  ] as const) {
+    if (filename.length <= maxLength) break;
+    const excess = filename.length - maxLength;
+    const limit = Math.max(minimum, parts[index].length - excess);
+    const shortened = shortenAtWord(parts[index], limit);
+    if (shortened) parts[index] = shortened;
+    filename = `${parts.join("; ")}.docx`;
+  }
+  return {
+    filename,
+    shortened: filename !== original,
+    valid: filename.length <= maxLength,
+  };
 }
 
 function EvidenceNote({ evidence }: { evidence?: EvidenciaRevision }) {
@@ -194,7 +284,7 @@ function SelectCatalog({
   label: string;
   value: string;
   onChange: (value: string) => void;
-  records: Array<{ id: number; nombre?: unknown; codigo?: unknown }>;
+  records: CatalogOption[];
   evidence?: EvidenciaRevision;
 }) {
   return (
@@ -271,6 +361,11 @@ export function RevisionJuridicaClient({ uuid }: { uuid: string }) {
     [review.data],
   );
   const activeAlerts = review.data?.calidad.alertas.filter((item) => item.estado === "ACTIVA") ?? [];
+  const filenamePreview = React.useMemo(
+    () =>
+      buildFilenamePreview(form, tipos.data?.results ?? [], efectos.data?.results ?? [], materias.data?.results ?? []),
+    [efectos.data?.results, form, materias.data?.results, tipos.data?.results],
+  );
 
   function update(field: keyof ReviewForm, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -286,9 +381,15 @@ export function RevisionJuridicaClient({ uuid }: { uuid: string }) {
       "fecha_emision",
       "titulo",
       "objeto",
+      "titulo_archivo",
+      "objeto_resumido",
     ];
     if (required.some((field) => !form[field].trim())) {
       toast.error("Complete todos los datos jurídicos obligatorios.");
+      return;
+    }
+    if (!filenamePreview.valid) {
+      toast.error("Acorte el título para archivo o el objeto resumido.");
       return;
     }
     if (
@@ -308,6 +409,8 @@ export function RevisionJuridicaClient({ uuid }: { uuid: string }) {
       fecha_emision: form.fecha_emision || null,
       titulo: form.titulo.trim(),
       objeto: form.objeto.trim(),
+      titulo_archivo: form.titulo_archivo.trim(),
+      objeto_resumido: form.objeto_resumido.trim(),
       observaciones: form.observaciones.trim(),
       observaciones_revision: form.observaciones_revision.trim(),
       decisiones_alertas: activeAlerts.map((alert) => ({
@@ -498,6 +601,70 @@ export function RevisionJuridicaClient({ uuid }: { uuid: string }) {
                 />
                 <EvidenceNote evidence={evidence.objeto} />
               </Field>
+              <div className="space-y-4 rounded-xl border border-violet-200 bg-violet-50/40 p-4 sm:col-span-2 dark:border-violet-900 dark:bg-violet-950/10">
+                <div className="flex items-start gap-3">
+                  <span className="rounded-lg bg-violet-600 p-2 text-white">
+                    <FileOutput className="size-4" />
+                  </span>
+                  <div>
+                    <h3 className="font-semibold">Nombre de los archivos Word y PDF</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Estos textos breves se usan solamente en el nombre del archivo. El título y el objeto completos se
+                      conservan arriba.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field>
+                    <div className="flex items-center justify-between gap-2">
+                      <FieldLabel htmlFor="titulo-archivo">Título para el archivo *</FieldLabel>
+                      <span className="text-xs text-muted-foreground">{form.titulo_archivo.length}/120</span>
+                    </div>
+                    <Input
+                      id="titulo-archivo"
+                      maxLength={120}
+                      value={form.titulo_archivo}
+                      onChange={(event) => update("titulo_archivo", event.target.value)}
+                    />
+                    <FieldDescription>Use una denominación breve y reconocible.</FieldDescription>
+                  </Field>
+                  <Field>
+                    <div className="flex items-center justify-between gap-2">
+                      <FieldLabel htmlFor="objeto-resumido">Objeto resumido *</FieldLabel>
+                      <span className="text-xs text-muted-foreground">{form.objeto_resumido.length}/200</span>
+                    </div>
+                    <Input
+                      id="objeto-resumido"
+                      maxLength={200}
+                      value={form.objeto_resumido}
+                      onChange={(event) => update("objeto_resumido", event.target.value)}
+                    />
+                    <FieldDescription>Resuma en una frase corta el propósito de la norma.</FieldDescription>
+                  </Field>
+                </div>
+                <div
+                  className={cn(
+                    "rounded-lg border bg-background p-3",
+                    filenamePreview.valid ? "border-emerald-300" : "border-red-300",
+                  )}
+                >
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Vista previa del nombre de descarga
+                  </p>
+                  <p className="mt-2 break-words font-medium text-sm">{filenamePreview.filename}</p>
+                  {filenamePreview.shortened ? (
+                    <p className="mt-2 text-amber-700 text-xs dark:text-amber-300">
+                      La vista previa se ajustó por palabras completas para respetar el límite de Windows. Puede acortar
+                      los dos campos para controlar el texto exacto.
+                    </p>
+                  ) : null}
+                  {!filenamePreview.valid ? (
+                    <p className="mt-2 text-red-700 text-xs dark:text-red-300">
+                      El nombre todavía es demasiado largo. Acorte el título para archivo o el objeto resumido.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
               <SelectCatalog
                 id="materia"
                 label="Materia *"

@@ -1,23 +1,43 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import {
+  listarArchivoFinalizado,
   listarDocumentos,
   obtenerDocumento,
+  obtenerOpcionesArchivoFinalizado,
   obtenerPropuestaExtraccion,
   obtenerResultadoCalidad,
   obtenerResultadoConversion,
   obtenerResultadoProcesamiento,
 } from "../api/documentos-api";
-import type { DocumentoFilters } from "../types/documentos.types";
+import type { ArchivoFinalizadoFilters, DocumentoFilters } from "../types/documentos.types";
 
 export const documentosQueryKey = ["documentos"] as const;
 
-export function useDocumentos(filters: DocumentoFilters) {
+export function useDocumentos(filters: DocumentoFilters, enabled = true) {
   return useQuery({
     queryKey: [...documentosQueryKey, "listado", filters],
     queryFn: () => listarDocumentos(filters),
     placeholderData: keepPreviousData,
     refetchInterval: 5000,
+    enabled,
+  });
+}
+
+export function useArchivoFinalizado(filters: ArchivoFinalizadoFilters, enabled = true) {
+  return useQuery({
+    queryKey: [...documentosQueryKey, "archivo-finalizado", filters],
+    queryFn: () => listarArchivoFinalizado(filters),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
+}
+
+export function useArchivoFinalizadoOpciones(enabled = true) {
+  return useQuery({
+    queryKey: [...documentosQueryKey, "archivo-finalizado-opciones"],
+    queryFn: obtenerOpcionesArchivoFinalizado,
+    enabled,
   });
 }
 
