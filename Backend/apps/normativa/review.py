@@ -39,6 +39,8 @@ FIELD_NAMES = (
     'fecha_emision',
     'titulo',
     'objeto',
+    'titulo_archivo',
+    'objeto_resumido',
     'observaciones',
 )
 
@@ -97,6 +99,10 @@ def _validate_document(documento):
         missing.append('titulo')
     if not documento.objeto.strip():
         missing.append('objeto')
+    if not documento.titulo_archivo.strip():
+        missing.append('titulo_archivo')
+    if not documento.objeto_resumido.strip():
+        missing.append('objeto_resumido')
     if missing:
         raise serializers.ValidationError({
             'detail': 'Complete todos los datos jurídicos obligatorios.',

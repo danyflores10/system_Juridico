@@ -99,6 +99,8 @@ class Documento(models.Model):
     fecha_emision = models.DateField(null=True, blank=True)
     titulo = models.CharField(max_length=500, blank=True, default='')
     objeto = models.TextField(blank=True, default='')
+    titulo_archivo = models.CharField(max_length=120, blank=True, default='')
+    objeto_resumido = models.CharField(max_length=200, blank=True, default='')
     observaciones = models.TextField(blank=True, default='')
     nomenclatura_preliminar = models.CharField(
         max_length=1000,
@@ -151,6 +153,8 @@ class Documento(models.Model):
         self.numero = (self.numero or '').strip()
         self.titulo = ' '.join((self.titulo or '').split())
         self.objeto = self.objeto.strip()
+        self.titulo_archivo = ' '.join((self.titulo_archivo or '').split())
+        self.objeto_resumido = ' '.join((self.objeto_resumido or '').split())
         self.observaciones = self.observaciones.strip()
         super().save(*args, **kwargs)
         if not self.codigo_interno:
@@ -868,6 +872,18 @@ class ResultadoConversion(models.Model):
     ruta_relativa = models.CharField(max_length=1000, blank=True, default='')
     hash_sha256 = models.CharField(max_length=64, blank=True, default='', db_index=True)
     tamano_bytes = models.PositiveBigIntegerField(default=0)
+    nombre_archivo_pdf = models.CharField(max_length=500, blank=True, default='')
+    archivo_pdf = models.FileField(
+        storage=NormativaFinalStorage(),
+        upload_to=archivo_final_path,
+        max_length=1000,
+        null=True,
+        blank=True,
+    )
+    ruta_pdf_relativa = models.CharField(max_length=1000, blank=True, default='')
+    hash_pdf_sha256 = models.CharField(max_length=64, blank=True, default='', db_index=True)
+    tamano_pdf_bytes = models.PositiveBigIntegerField(default=0)
+    pdf_texto_buscable = models.BooleanField(default=False)
     version = models.PositiveSmallIntegerField(default=1)
     intentos = models.PositiveSmallIntegerField(default=0)
     iniciado_at = models.DateTimeField(null=True, blank=True)

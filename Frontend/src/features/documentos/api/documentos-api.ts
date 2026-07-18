@@ -1,20 +1,24 @@
 import { apiRequest } from "@/lib/api/client";
+
 import type {
+  ArchivoFinalizadoFilters,
+  ArchivoFinalizadoOpciones,
+  ArchivoJuridicoFinalizado,
+  CalidadResumen,
+  ConversionResumen,
   DocumentoDetail,
   DocumentoFilters,
   DocumentoList,
+  ExtraccionResumen,
   PaginatedResponse,
   ProcesamientoResumen,
-  ExtraccionResumen,
   PropuestaExtraccion,
-  CalidadResumen,
   ResultadoCalidad,
-  ResultadoProcesamiento,
-  ConversionResumen,
   ResultadoConversion,
+  ResultadoProcesamiento,
 } from "../types/documentos.types";
 
-function buildQuery(filters: DocumentoFilters) {
+function buildQuery<T extends object>(filters: T) {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(filters)) if (value !== "" && value != null) params.set(key, String(value));
   return params.toString();
@@ -22,6 +26,16 @@ function buildQuery(filters: DocumentoFilters) {
 
 export function listarDocumentos(filters: DocumentoFilters = {}) {
   return apiRequest<PaginatedResponse<DocumentoList>>(`documentos/?${buildQuery(filters)}`);
+}
+
+export function listarArchivoFinalizado(filters: ArchivoFinalizadoFilters = {}) {
+  return apiRequest<PaginatedResponse<ArchivoJuridicoFinalizado>>(
+    `documentos/archivo-finalizado/?${buildQuery(filters)}`,
+  );
+}
+
+export function obtenerOpcionesArchivoFinalizado() {
+  return apiRequest<ArchivoFinalizadoOpciones>("documentos/archivo-finalizado-opciones/");
 }
 
 export function obtenerDocumento(uuid: string) {

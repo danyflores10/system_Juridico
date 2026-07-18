@@ -108,7 +108,9 @@ class ResultadoConversionInline(admin.StackedInline):
     readonly_fields = (
         'estado', 'tarea_id', 'nomenclatura_completa', 'nombre_archivo',
         'carpeta_materia', 'archivo', 'ruta_relativa', 'hash_sha256',
-        'tamano_bytes', 'version', 'intentos', 'iniciado_at',
+        'tamano_bytes', 'nombre_archivo_pdf', 'archivo_pdf',
+        'ruta_pdf_relativa', 'hash_pdf_sha256', 'tamano_pdf_bytes',
+        'pdf_texto_buscable', 'version', 'intentos', 'iniciado_at',
         'finalizado_at', 'duracion_ms', 'error_codigo', 'error_mensaje',
         'detalles_tecnicos', 'created_at', 'updated_at',
     )

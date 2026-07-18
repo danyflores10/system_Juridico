@@ -2,7 +2,14 @@ import type { DocumentoEstado, DocumentoOrigen } from "@/features/documentos/typ
 
 export type PaginatedResponse<T> = { count: number; next: string | null; previous: string | null; results: T[] };
 export type VistaRevision = "" | "LISTOS" | "ALERTAS" | "BAJA_CONFIANZA";
-export type CatalogoRevision = { id: number; codigo: string; nombre: string; sigla?: string };
+export type CatalogoRevision = {
+  id: number;
+  codigo: string;
+  nombre: string;
+  sigla?: string;
+  abreviatura_archivo?: string;
+  carpeta_destino?: string;
+};
 
 export type RevisionResumen = {
   id: number;
@@ -159,6 +166,8 @@ export type DocumentoRevision = {
   fecha_emision: string | null;
   titulo: string;
   objeto: string;
+  titulo_archivo: string;
+  objeto_resumido: string;
   observaciones: string;
   propuesta: PropuestaRevision;
   calidad: CalidadRevision;
@@ -177,6 +186,8 @@ export type AprobarRevisionPayload = {
   fecha_emision: string | null;
   titulo: string;
   objeto: string;
+  titulo_archivo: string;
+  objeto_resumido: string;
   observaciones: string;
   observaciones_revision: string;
   decisiones_alertas: DecisionAlertaInput[];

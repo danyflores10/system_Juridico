@@ -51,6 +51,14 @@ class DocumentoFilter(django_filters.FilterSet):
     )
     fecha_desde = django_filters.DateFilter(field_name='fecha_recepcion__date', lookup_expr='gte')
     fecha_hasta = django_filters.DateFilter(field_name='fecha_recepcion__date', lookup_expr='lte')
+    fecha_final_desde = django_filters.DateFilter(
+        field_name='resultado_conversion__finalizado_at__date',
+        lookup_expr='gte',
+    )
+    fecha_final_hasta = django_filters.DateFilter(
+        field_name='resultado_conversion__finalizado_at__date',
+        lookup_expr='lte',
+    )
 
     def filter_estado_grupo(self, queryset, _name, value):
         if not value:
@@ -60,7 +68,7 @@ class DocumentoFilter(django_filters.FilterSet):
     class Meta:
         model = Documento
         fields = (
-            'estado', 'tipo_origen',
+            'estado', 'tipo_origen', 'materia', 'tipo_norma',
         )
 
 

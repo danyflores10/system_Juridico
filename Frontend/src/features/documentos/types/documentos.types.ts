@@ -44,6 +44,11 @@ export type ConversionResumen = {
   ruta_relativa: string;
   hash_sha256: string;
   tamano_bytes: number;
+  nombre_archivo_pdf: string;
+  ruta_pdf_relativa: string;
+  hash_pdf_sha256: string;
+  tamano_pdf_bytes: number;
+  pdf_texto_buscable: boolean;
   version: number;
   intentos: number;
   iniciado_at: string | null;
@@ -57,6 +62,7 @@ export type ConversionResumen = {
 export type ResultadoConversion = ConversionResumen & {
   detalles_tecnicos: Record<string, unknown>;
   archivo_url: string | null;
+  archivo_pdf_url: string | null;
 };
 
 export type ProcesamientoResumen = {
@@ -258,6 +264,36 @@ export type DocumentoFilters = {
   fecha_hasta?: string;
   ordering?: string;
   page?: number;
+};
+
+export type ArchivoFinalizadoFilters = {
+  q?: string;
+  materia?: number | "";
+  tipo_norma?: number | "";
+  fecha_final_desde?: string;
+  fecha_final_hasta?: string;
+  ordering?: string;
+  page?: number;
+};
+
+export type ArchivoJuridicoFinalizado = {
+  id: number;
+  uuid: string;
+  codigo_interno: string;
+  tipo_norma: CatalogoPropuesto | null;
+  efecto_normativo: CatalogoPropuesto | null;
+  materia: CatalogoPropuesto | null;
+  numero: string;
+  fecha_emision: string | null;
+  titulo: string;
+  objeto_resumido: string;
+  fecha_finalizacion: string | null;
+  conversion: ResultadoConversion;
+};
+
+export type ArchivoFinalizadoOpciones = {
+  materias: CatalogoPropuesto[];
+  tipos_norma: CatalogoPropuesto[];
 };
 
 export type PaginatedResponse<T> = { count: number; next: string | null; previous: string | null; results: T[] };

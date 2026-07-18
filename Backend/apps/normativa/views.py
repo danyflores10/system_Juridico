@@ -22,6 +22,7 @@ from .models import (
 from .permissions import DocumentoAccessPermission
 from .serializers import (
     DocumentoDetailSerializer,
+    ArchivoJuridicoFinalizadoSerializer,
     DocumentoListSerializer,
     DocumentoUploadSerializer,
     HistorialDocumentoSerializer,
@@ -72,15 +73,85 @@ class DocumentoViewSet(viewsets.ReadOnlyModelViewSet):
         ).select_related(
             'resultado_procesamiento', 'propuesta_extraccion',
             'evaluacion_calidad', 'resultado_conversion',
-            'documento_canonico',
+            'documento_canonico', 'tipo_norma', 'efecto_normativo', 'materia',
         ).prefetch_related('archivos', 'historial__usuario')
         query = self.request.query_params.get('q', '').strip()
         if query:
-            queryset = queryset.filter(Q(codigo_interno__icontains=query) | Q(archivos__nombre_original__icontains=query)).distinct()
+            queryset = queryset.filter(
+                Q(codigo_interno__icontains=query)
+                | Q(archivos__nombre_original__icontains=query)
+                | Q(numero__icontains=query)
+                | Q(titulo__icontains=query)
+                | Q(objeto_resumido__icontains=query)
+                | Q(materia__nombre__icontains=query)
+                | Q(tipo_norma__nombre__icontains=query)
+                | Q(resultado_conversion__nomenclatura_completa__icontains=query)
+                | Q(resultado_conversion__nombre_archivo__icontains=query)
+                | Q(resultado_conversion__nombre_archivo_pdf__icontains=query)
+            ).distinct()
         return queryset
 
     def get_serializer_class(self):
+        if self.action == 'archivo_finalizado':
+            return ArchivoJuridicoFinalizadoSerializer
         return DocumentoListSerializer if self.action == 'list' else DocumentoDetailSerializer
+
+    def _archivo_finalizado_queryset(self):
+        return self.get_queryset().filter(
+            estado__in=(Documento.Estado.FINALIZADO, Documento.Estado.VALIDADO),
+            resultado_conversion__estado=ResultadoConversion.Estado.COMPLETADA,
+            resultado_conversion__archivo__isnull=False,
+            resultado_conversion__archivo_pdf__isnull=False,
+        ).exclude(
+            resultado_conversion__archivo='',
+        ).exclude(
+            resultado_conversion__archivo_pdf='',
+        )
+
+    @action(detail=False, methods=('get',), url_path='archivo-finalizado')
+    def archivo_finalizado(self, request):
+        queryset = self.filter_queryset(self._archivo_finalizado_queryset())
+        page = self.paginate_queryset(queryset)
+        serializer = ArchivoJuridicoFinalizadoSerializer(
+            page if page is not None else queryset,
+            many=True,
+            context=self.get_serializer_context(),
+        )
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=('get',),
+        url_path='archivo-finalizado-opciones',
+    )
+    def archivo_finalizado_opciones(self, request):
+        queryset = self._archivo_finalizado_queryset()
+        materias = queryset.exclude(materia__isnull=True).values(
+            'materia_id', 'materia__codigo', 'materia__nombre',
+        ).order_by('materia__nombre').distinct()
+        tipos_norma = queryset.exclude(tipo_norma__isnull=True).values(
+            'tipo_norma_id', 'tipo_norma__codigo', 'tipo_norma__nombre',
+        ).order_by('tipo_norma__nombre').distinct()
+        return Response({
+            'materias': [
+                {
+                    'id': item['materia_id'],
+                    'codigo': item['materia__codigo'],
+                    'nombre': item['materia__nombre'],
+                }
+                for item in materias
+            ],
+            'tipos_norma': [
+                {
+                    'id': item['tipo_norma_id'],
+                    'codigo': item['tipo_norma__codigo'],
+                    'nombre': item['tipo_norma__nombre'],
+                }
+                for item in tipos_norma
+            ],
+        })
 
     @action(detail=False, methods=('post',), url_path='upload', serializer_class=DocumentoUploadSerializer)
     def upload(self, request):
@@ -463,6 +534,29 @@ class DocumentoViewSet(viewsets.ReadOnlyModelViewSet):
             ),
             as_attachment=True,
             filename=resultado.nombre_archivo,
+        )
+
+    @action(detail=True, methods=('get',), url_path='archivo-pdf-consulta')
+    def archivo_pdf_consulta(self, request, uuid=None):
+        try:
+            resultado = self.get_object().resultado_conversion
+        except ResultadoConversion.DoesNotExist:
+            resultado = None
+        if not resultado or not resultado.archivo_pdf:
+            return Response(
+                {'detail': 'El documento todavía no tiene un PDF de consulta final.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not resultado.archivo_pdf.storage.exists(resultado.archivo_pdf.name):
+            return Response(
+                {'detail': 'El PDF de consulta no está disponible en el almacenamiento.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return FileResponse(
+            resultado.archivo_pdf.open('rb'),
+            content_type='application/pdf',
+            as_attachment=True,
+            filename=resultado.nombre_archivo_pdf,
         )
 
 

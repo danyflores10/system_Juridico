@@ -35,15 +35,22 @@ class ErrorConversion(Exception):
 def _limpiar_componente(valor):
     texto = re.sub(r'[<>:"/\\|?*\x00-\x1f]', ' ', str(valor or ''))
     texto = texto.replace(';', ',')
-    return re.sub(r'\s+', ' ', texto).strip(' .')
+    return re.sub(r'\s+', ' ', texto).strip(' .,;')
 
 
-def _componente_recortado(valor, limite):
+def _recortar_por_palabras(valor, limite):
     if len(valor) <= limite:
         return valor
-    if limite <= 3:
-        return valor[:limite]
-    return valor[:limite - 3].rstrip() + '...'
+    palabras = valor.split()
+    resultado = []
+    longitud = 0
+    for palabra in palabras:
+        adicional = len(palabra) + (1 if resultado else 0)
+        if longitud + adicional > limite:
+            break
+        resultado.append(palabra)
+        longitud += adicional
+    return ' '.join(resultado).rstrip(' .,;')
 
 
 def _limite_nombre_archivo(carpeta):
@@ -70,34 +77,35 @@ def generar_nomenclatura_final(documento):
         documento.tipo_norma.abreviatura_archivo,
         documento.numero,
         documento.fecha_emision.strftime('%d-%m-%Y'),
-        documento.titulo,
-        documento.objeto,
+        documento.titulo_archivo or documento.titulo,
+        documento.objeto_resumido or documento.objeto,
         documento.materia.nombre,
     ]
     limpios = [_limpiar_componente(item) for item in componentes]
-    nomenclatura = '; '.join(limpios)
     carpeta = _limpiar_componente(documento.materia.carpeta_destino)
     maximo = _limite_nombre_archivo(carpeta)
-    nombre = f'{nomenclatura}.docx'
+    nombre = f'{"; ".join(limpios)}.docx'
     truncado = False
     if len(nombre) > maximo:
         truncado = True
-        digest = hashlib.sha256(nomenclatura.encode('utf-8')).hexdigest()[:8]
-        limpios[5] = _componente_recortado(limpios[5], 55)
-        limpios[4] = _componente_recortado(limpios[4], 65)
-        limpios[6] = _componente_recortado(limpios[6], 40)
-        nombre = f'{"; ".join(limpios)}; {digest}.docx'
-        minimos = {5: 15, 4: 20, 6: 15, 2: 8}
-        while len(nombre) > maximo:
-            reducibles = [indice for indice, minimo in minimos.items() if len(limpios[indice]) > minimo]
-            if not reducibles:
+        for indice, minimo in ((5, 18), (4, 15), (6, 15), (2, 4)):
+            if len(nombre) <= maximo:
                 break
-            indice = max(reducibles, key=lambda item: len(limpios[item]) - minimos[item])
-            limpios[indice] = _componente_recortado(limpios[indice], len(limpios[indice]) - 1)
-            nombre = f'{"; ".join(limpios)}; {digest}.docx'
+            exceso = len(nombre) - maximo
+            limite = max(minimo, len(limpios[indice]) - exceso)
+            reducido = _recortar_por_palabras(limpios[indice], limite)
+            if reducido:
+                limpios[indice] = reducido
+            nombre = f'{"; ".join(limpios)}.docx'
         if len(nombre) > maximo:
-            sufijo = f'; {digest}.docx'
-            nombre = f'{nombre[:maximo - len(sufijo)].rstrip(" .;")}{sufijo}'
+            raise ErrorConversion(
+                'NOMENCLATURA_DEMASIADO_LARGA',
+                (
+                    'El título para archivo o el objeto resumido siguen siendo '
+                    'demasiado largos. Corrija ambos campos en la revisión jurídica.'
+                ),
+            )
+    nomenclatura = Path(nombre).stem
     return nomenclatura, nombre, truncado
 
 
@@ -114,6 +122,10 @@ def _validar_ficha(documento):
         faltantes.append('titulo')
     if not documento.objeto.strip():
         faltantes.append('objeto')
+    if not documento.titulo_archivo.strip():
+        faltantes.append('titulo_archivo')
+    if not documento.objeto_resumido.strip():
+        faltantes.append('objeto_resumido')
     if faltantes:
         raise ErrorConversion(
             'FICHA_INCOMPLETA',
@@ -322,6 +334,44 @@ def _nombre_disponible(resultado, carpeta, nombre):
     return candidato, version
 
 
+def _nombres_par_disponibles(resultado, carpeta, nombre_word):
+    storage = resultado._meta.get_field('archivo').storage
+    stem = Path(nombre_word).stem
+    maximo = _limite_nombre_archivo(carpeta)
+    version = 1
+    while True:
+        sufijo = '' if version == 1 else f'; v{version}'
+        stem_disponible = stem[:maximo - len(sufijo) - len('.docx')].rstrip(' .;')
+        nombre_word_candidato = f'{stem_disponible}{sufijo}.docx'
+        nombre_pdf_candidato = f'{stem_disponible}{sufijo}.pdf'
+        word_existe = storage.exists(f'{carpeta}/{nombre_word_candidato}')
+        pdf_existe = storage.exists(f'{carpeta}/{nombre_pdf_candidato}')
+        if not word_existe and not pdf_existe:
+            return nombre_word_candidato, nombre_pdf_candidato, version
+        version += 1
+
+
+def _pdf_tiene_texto_buscable(ruta_pdf):
+    try:
+        import fitz
+
+        with fitz.open(ruta_pdf) as pdf:
+            if not pdf.page_count:
+                raise ErrorConversion(
+                    'PDF_CONSULTA_INVALIDO',
+                    'El PDF de consulta no contiene páginas.',
+                )
+            return any(pagina.get_text('text').strip() for pagina in pdf)
+    except ErrorConversion:
+        raise
+    except Exception as exc:
+        raise ErrorConversion(
+            'PDF_CONSULTA_INVALIDO',
+            'No se pudo validar el PDF de consulta.',
+            detalles={'error_pdf_consulta': str(exc)[:2000]},
+        ) from exc
+
+
 def _marcar_error(documento_id, error, inicio):
     with transaction.atomic():
         documento = Documento.objects.select_for_update().get(pk=documento_id)
@@ -424,10 +474,14 @@ def convertir_documento_final(documento_id):
             temporal = Path(temporal)
             entrada = temporal / 'procesado.pdf'
             salida = temporal / 'normativa.docx'
+            salida_pdf = temporal / 'normativa.pdf'
             # The final Word must preserve the source appearance, so render the
             # untouched original PDF rather than the OCR-processed derivative.
             with original.archivo.open('rb') as origen, entrada.open('wb') as destino:
                 shutil.copyfileobj(origen, destino)
+            with procesado.archivo.open('rb') as origen, salida_pdf.open('wb') as destino:
+                shutil.copyfileobj(origen, destino)
+            pdf_texto_buscable = _pdf_tiene_texto_buscable(salida_pdf)
             procesamiento = documento.resultado_procesamiento
             # Older records may have been classified as native PDFs because a
             # scanned image already contained a selectable OCR text layer.
@@ -450,21 +504,38 @@ def convertir_documento_final(documento_id):
                 raise ErrorConversion('CARPETA_INVALIDA', 'La materia no tiene una carpeta final válida.')
 
             archivo_guardado = None
+            archivo_pdf_guardado = None
             try:
                 with transaction.atomic():
                     documento = Documento.objects.select_for_update().get(pk=documento_id)
                     resultado = ResultadoConversion.objects.select_for_update().get(documento=documento)
-                    nombre, version = _nombre_disponible(resultado, carpeta, nombre_base)
+                    nombre, nombre_pdf, version = _nombres_par_disponibles(
+                        resultado,
+                        carpeta,
+                        nombre_base,
+                    )
                     with salida.open('rb') as contenido:
                         resultado.carpeta_materia = carpeta
                         resultado.archivo.save(nombre, File(contenido), save=False)
                     archivo_guardado = resultado.archivo
+                    with salida_pdf.open('rb') as contenido_pdf:
+                        resultado.archivo_pdf.save(
+                            nombre_pdf,
+                            File(contenido_pdf),
+                            save=False,
+                        )
+                    archivo_pdf_guardado = resultado.archivo_pdf
                     resultado.estado = ResultadoConversion.Estado.COMPLETADA
                     resultado.nomenclatura_completa = nomenclatura
                     resultado.nombre_archivo = nombre
                     resultado.ruta_relativa = resultado.archivo.name
                     resultado.hash_sha256 = _hash_archivo(salida)
                     resultado.tamano_bytes = salida.stat().st_size
+                    resultado.nombre_archivo_pdf = nombre_pdf
+                    resultado.ruta_pdf_relativa = resultado.archivo_pdf.name
+                    resultado.hash_pdf_sha256 = _hash_archivo(salida_pdf)
+                    resultado.tamano_pdf_bytes = salida_pdf.stat().st_size
+                    resultado.pdf_texto_buscable = pdf_texto_buscable
                     resultado.version = version
                     resultado.finalizado_at = timezone.now()
                     resultado.duracion_ms = int((time.monotonic() - inicio) * 1000)
@@ -472,6 +543,8 @@ def convertir_documento_final(documento_id):
                         **detalles_conversion,
                         'nombre_truncado': truncado,
                         'pdf_procesado_hash': procesado.hash_sha256,
+                        'pdf_consulta_fuente': 'PDF_PROCESADO',
+                        'pdf_consulta_texto_buscable': pdf_texto_buscable,
                     }
                     resultado.save()
                     documento.estado = Documento.Estado.FINALIZADO
@@ -481,12 +554,17 @@ def convertir_documento_final(documento_id):
                         HistorialDocumento.Accion.CONVERSION_COMPLETADA,
                         estado_anterior=Documento.Estado.CONVIRTIENDO,
                         estado_nuevo=documento.estado,
-                        descripcion=f'Word final guardado en {resultado.ruta_relativa}.',
+                        descripcion=(
+                            f'Word final guardado en {resultado.ruta_relativa}. '
+                            f'PDF de consulta guardado en {resultado.ruta_pdf_relativa}.'
+                        ),
                     )
                 return resultado
             except Exception:
                 if archivo_guardado:
                     archivo_guardado.delete(save=False)
+                if archivo_pdf_guardado:
+                    archivo_pdf_guardado.delete(save=False)
                 raise
     except Exception as exc:
         error = exc if isinstance(exc, ErrorConversion) else ErrorConversion(

@@ -1,6 +1,7 @@
 import shutil
 import tempfile
 from datetime import timedelta
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import fitz
@@ -107,6 +108,8 @@ class DocumentosNormativosTests(APITestCase):
         documento.fecha_emision = propuesta.fecha_emision_propuesta
         documento.titulo = propuesta.titulo_propuesto
         documento.objeto = propuesta.objeto_propuesto
+        documento.titulo_archivo = 'Código Tributario'
+        documento.objeto_resumido = 'Sistema Tributario Boliviano'
         documento.estado = Documento.Estado.LISTO_PARA_CONVERSION
         documento.save()
         return documento
@@ -203,6 +206,43 @@ class DocumentosNormativosTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         uuids = {item['uuid'] for item in response.data['results']}
         self.assertEqual(uuids, {str(pendiente.uuid), str(observado.uuid)})
+
+    def test_archivo_finalizado_expone_ficha_y_descargas(self):
+        documento = self.preparar_para_conversion()
+        documento.numero = '987654'
+        documento.titulo_archivo = 'Norma para archivo jurídico final'
+        documento.objeto_resumido = 'Consulta independiente del documento final'
+        documento.save()
+        convertir_documento_final(documento.pk)
+
+        response = self.client.get(
+            reverse('documento-archivo-finalizado'),
+            {'q': 'Tributario', 'materia': documento.materia_id},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        item = response.data['results'][0]
+        self.assertEqual(item['uuid'], str(documento.uuid))
+        self.assertEqual(item['materia']['id'], documento.materia_id)
+        self.assertEqual(item['tipo_norma']['id'], documento.tipo_norma_id)
+        self.assertTrue(item['conversion']['archivo_url'].endswith('/archivo-word/'))
+        self.assertTrue(
+            item['conversion']['archivo_pdf_url'].endswith(
+                '/archivo-pdf-consulta/'
+            )
+        )
+        self.assertTrue(item['conversion']['pdf_texto_buscable'])
+
+        opciones = self.client.get(
+            reverse('documento-archivo-finalizado-opciones')
+        )
+        self.assertEqual(opciones.status_code, status.HTTP_200_OK)
+        self.assertEqual(opciones.data['materias'][0]['id'], documento.materia_id)
+        self.assertEqual(
+            opciones.data['tipos_norma'][0]['id'],
+            documento.tipo_norma_id,
+        )
 
     def test_procesa_pdf_con_texto_sin_ocr(self):
         documento, _ = self.cargar(crear_pdf_texto())
@@ -462,6 +502,8 @@ class DocumentosNormativosTests(APITestCase):
             'fecha_emision': propuesta.fecha_emision_propuesta.isoformat(),
             'titulo': propuesta.titulo_propuesto,
             'objeto': propuesta.objeto_propuesto,
+            'titulo_archivo': 'Código Tributario',
+            'objeto_resumido': 'Sistema Tributario Boliviano',
             'observaciones': '',
             'observaciones_revision': 'Ficha verificada con el PDF original.',
             'decisiones_alertas': [],
@@ -484,7 +526,7 @@ class DocumentosNormativosTests(APITestCase):
         self.assertEqual(documento.estado, Documento.Estado.LISTO_PARA_CONVERSION)
         self.assertEqual(documento.numero, propuesta.numero_propuesto)
         self.assertEqual(revision.estado, RevisionJuridica.Estado.APROBADA)
-        self.assertEqual(revision.cambios.count(), 9)
+        self.assertEqual(revision.cambios.count(), 11)
         self.assertTrue(revision.cambios.filter(
             campo='titulo',
             origen_valor=CambioRevisionJuridica.OrigenValor.PROPUESTA,
@@ -521,6 +563,8 @@ class DocumentosNormativosTests(APITestCase):
             'fecha_emision': propuesta.fecha_emision_propuesta.isoformat(),
             'titulo': propuesta.titulo_propuesto,
             'objeto': 'La presente Ley regula las obligaciones tributarias.',
+            'titulo_archivo': 'Código Tributario',
+            'objeto_resumido': 'Obligaciones tributarias en Bolivia',
             'decisiones_alertas': [],
         }
         url = reverse('documento-aprobar-revision-juridica', kwargs={'uuid': documento.uuid})
@@ -583,6 +627,13 @@ class DocumentosNormativosTests(APITestCase):
         self.assertTrue(resultado.archivo.storage.exists(resultado.archivo.name))
         self.assertEqual(len(resultado.hash_sha256), 64)
         self.assertGreater(resultado.tamano_bytes, 0)
+        self.assertTrue(resultado.archivo_pdf.storage.exists(resultado.archivo_pdf.name))
+        self.assertEqual(Path(resultado.nombre_archivo).stem, Path(resultado.nombre_archivo_pdf).stem)
+        self.assertTrue(resultado.nombre_archivo_pdf.endswith('.pdf'))
+        self.assertIn('Derecho Tributario/', resultado.ruta_pdf_relativa)
+        self.assertEqual(len(resultado.hash_pdf_sha256), 64)
+        self.assertGreater(resultado.tamano_pdf_bytes, 0)
+        self.assertTrue(resultado.pdf_texto_buscable)
         self.assertEqual(resultado.detalles_tecnicos['conversor'], 'pdf2docx')
         self.assertTrue(resultado.detalles_tecnicos['texto_editable'])
 
@@ -680,6 +731,34 @@ class DocumentosNormativosTests(APITestCase):
         resultado = convertir_documento_final(documento.pk)
         self.assertEqual(resultado.version, 2)
         self.assertIn('; v2.docx', resultado.nombre_archivo)
+        self.assertIn('; v2.pdf', resultado.nombre_archivo_pdf)
+        self.assertEqual(Path(resultado.nombre_archivo).stem, Path(resultado.nombre_archivo_pdf).stem)
+
+    def test_nomenclatura_larga_no_agrega_hash_ni_puntos_suspensivos(self):
+        from apps.normativa.conversion import generar_nomenclatura_final
+
+        documento = self.preparar_para_conversion()
+        documento.titulo_archivo = (
+            'Regulación integral de la administración tributaria nacional '
+            'y sus procedimientos institucionales'
+        )
+        documento.objeto_resumido = (
+            'Establece las obligaciones tributarias y los procedimientos '
+            'aplicables a todas las instituciones públicas del país'
+        )
+        documento.save(update_fields=(
+            'titulo_archivo',
+            'objeto_resumido',
+            'updated_at',
+        ))
+
+        nomenclatura, nombre, truncado = generar_nomenclatura_final(documento)
+
+        self.assertTrue(truncado)
+        self.assertNotIn('...', nombre)
+        self.assertNotRegex(nombre, r'; [0-9a-f]{8}\.docx$')
+        self.assertEqual(nomenclatura, nombre.removesuffix('.docx'))
+        self.assertTrue(nombre.endswith('; Derecho Tributario.docx'))
 
     def test_conversion_rechaza_ficha_definitiva_incompleta(self):
         documento = self.preparar_para_conversion()
@@ -723,9 +802,16 @@ class DocumentosNormativosTests(APITestCase):
         response = self.client.get(reverse('documento-resultado-conversion', kwargs={'uuid': documento.uuid}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['archivo_url'].endswith('/archivo-word/'))
+        self.assertTrue(response.data['archivo_pdf_url'].endswith('/archivo-pdf-consulta/'))
+        self.assertTrue(response.data['pdf_texto_buscable'])
         descarga = self.client.get(reverse('documento-archivo-word', kwargs={'uuid': documento.uuid}))
         self.assertEqual(descarga.status_code, status.HTTP_200_OK)
         self.assertIn('wordprocessingml.document', descarga['Content-Type'])
+        descarga_pdf = self.client.get(
+            reverse('documento-archivo-pdf-consulta', kwargs={'uuid': documento.uuid})
+        )
+        self.assertEqual(descarga_pdf.status_code, status.HTTP_200_OK)
+        self.assertEqual(descarga_pdf['Content-Type'], 'application/pdf')
 
     def test_descarga_word_faltante_responde_404_sin_exponer_error(self):
         documento = self.preparar_para_conversion()
