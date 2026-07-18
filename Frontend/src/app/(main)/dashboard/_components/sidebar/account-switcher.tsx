@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 
-import { BadgeCheck, Bell, Check, CreditCard, LogOut } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { BadgeCheck, Bell, Check, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -27,10 +30,17 @@ export function AccountSwitcher({
   }>;
 }) {
   const [activeUser, setActiveUser] = useState(users[0]);
+  const router = useRouter();
 
   if (!activeUser) {
     return null;
   }
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
+    router.replace("/auth/v2/login");
+    router.refresh();
+  };
 
   return (
     <DropdownMenu>
@@ -70,21 +80,21 @@ export function AccountSwitcher({
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <BadgeCheck />
-            Cuenta
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/cuenta">
+              <BadgeCheck />
+              Cuenta
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCard />
-            Honorarios
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Bell />
-            Notificaciones
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/cuenta">
+              <Bell />
+              Notificaciones
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut />
           Cerrar sesión
         </DropdownMenuItem>

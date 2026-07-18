@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   BookOpenCheck,
   Check,
+  ClipboardCheck,
   ExternalLink,
   FileOutput,
   Gavel,
@@ -444,7 +445,7 @@ export function RevisionJuridicaClient({ uuid }: { uuid: string }) {
   if (review.isLoading)
     return (
       <div className="space-y-4">
-        <Skeleton className="h-40 w-full rounded-2xl" />
+        <Skeleton className="h-40 w-full rounded-none" />
         <Skeleton className="h-16 w-full" />
         <Skeleton className="h-[520px] w-full" />
       </div>
@@ -467,48 +468,67 @@ export function RevisionJuridicaClient({ uuid }: { uuid: string }) {
 
   return (
     <div className="flex flex-col gap-5 pb-24">
-      <div className="overflow-hidden rounded-2xl border bg-card">
-        <div className="flex flex-col gap-5 bg-slate-950 p-6 text-white dark:bg-slate-900 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/10 hover:text-white"
-              onClick={() => router.push("/dashboard/revision-juridica")}
-            >
-              <ArrowLeft />
-            </Button>
-            <div>
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <Badge className="bg-violet-500 text-white">Revisión jurídica</Badge>
-                <span className="font-mono text-xs text-slate-400">{data.codigo_interno}</span>
+      <div className="overflow-hidden rounded-none border bg-card shadow-sm">
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+          <ClipboardCheck className="pointer-events-none absolute -right-6 -bottom-8 size-48 rotate-12 text-primary-foreground/10" />
+          <div className="relative flex flex-col gap-5 p-6 lg:flex-row lg:items-center lg:justify-between lg:p-7">
+            <div className="flex min-w-0 items-start gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="mt-0.5 shrink-0 rounded-xl bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25 hover:text-primary-foreground"
+                onClick={() => router.push("/dashboard/revision-juridica")}
+              >
+                <ArrowLeft />
+              </Button>
+              <div className="min-w-0">
+                <div className="mb-2.5 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/15 px-3 py-1 font-medium text-xs uppercase tracking-wide">
+                    <ClipboardCheck className="size-3.5" /> Revisión jurídica
+                  </span>
+                  <span className="rounded-full bg-primary-foreground/10 px-2.5 py-1 font-mono text-[11px] text-primary-foreground/80 tracking-wide">
+                    {data.codigo_interno}
+                  </span>
+                </div>
+                <h1 className="max-w-4xl truncate font-semibold text-2xl tracking-tight lg:text-[1.7rem]">
+                  {form.titulo || data.nombre_archivo}
+                </h1>
+                <p className="mt-1.5 text-primary-foreground/80 text-sm">
+                  Contraste la propuesta con su evidencia antes de aprobar.
+                </p>
               </div>
-              <h1 className="max-w-4xl text-2xl font-semibold">{form.titulo || data.nombre_archivo}</h1>
-              <p className="mt-1 text-sm text-slate-300">Contraste la propuesta con su evidencia antes de aprobar.</p>
             </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <div className="grid size-11 place-items-center rounded-full bg-violet-500/20 text-violet-300">
-              <Scale />
-            </div>
-            <div>
-              <div className="font-medium">Revisión guiada</div>
-              <div className="text-xs text-slate-400">Compare la ficha con el PDF original</div>
+            <div className="flex shrink-0 items-center gap-3.5 rounded-2xl bg-primary-foreground/10 px-5 py-4">
+              <div className="grid size-12 place-items-center rounded-xl bg-primary-foreground/20 text-primary-foreground">
+                <Scale className="size-6" />
+              </div>
+              <div>
+                <div className="font-semibold">Revisión guiada</div>
+                <div className="mt-0.5 text-primary-foreground/80 text-xs">Compare la ficha con el PDF original</div>
+              </div>
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3 border-t px-6 py-3">
+        <div className="flex flex-wrap items-center gap-2.5 border-t bg-muted/30 px-6 py-3">
           <DocumentoStatusBadge estado={data.estado} />
           {activeAlerts.length ? (
-            <Badge variant="outline" className="border-amber-300 text-amber-700">
+            <Badge
+              variant="outline"
+              className="rounded-full border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"
+            >
               <AlertTriangle /> {activeAlerts.length} observaciones
             </Badge>
           ) : (
-            <Badge variant="outline" className="border-emerald-300 text-emerald-700">
+            <Badge
+              variant="outline"
+              className="rounded-full border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+            >
               <ShieldCheck /> Sin observaciones
             </Badge>
           )}
-          <span className="ml-auto text-xs text-muted-foreground">{data.tipo_origen_display}</span>
+          <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <BookOpenCheck className="size-3.5" /> {data.tipo_origen_display}
+          </span>
         </div>
       </div>
 

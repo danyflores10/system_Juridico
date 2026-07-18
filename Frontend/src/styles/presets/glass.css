@@ -1,0 +1,141 @@
+/*
+label: Cristal
+value: glass
+*/
+
+:root[data-theme-preset="glass"] {
+  --radius: 1rem;
+  --background: oklch(0.97 0.008 260 / 0.5);
+  --foreground: oklch(0.22 0.03 268);
+  --card: oklch(1 0 0 / 0.55);
+  --card-foreground: oklch(0.22 0.03 268);
+  --popover: oklch(1 0 0 / 0.75);
+  --popover-foreground: oklch(0.22 0.03 268);
+  --primary: oklch(0.5 0.19 278);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.96 0.015 270 / 0.6);
+  --secondary-foreground: oklch(0.32 0.06 275);
+  --muted: oklch(0.95 0.01 265 / 0.55);
+  --muted-foreground: oklch(0.48 0.02 268);
+  --accent: oklch(0.93 0.03 275 / 0.65);
+  --accent-foreground: oklch(0.3 0.08 278);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(1 0 0 / 0.45);
+  --input: oklch(1 0 0 / 0.5);
+  --ring: oklch(0.5 0.19 278);
+  --chart-1: oklch(0.5 0.19 278);
+  --chart-2: oklch(0.65 0.12 200);
+  --chart-3: oklch(0.6 0.14 330);
+  --chart-4: oklch(0.7 0.12 92);
+  --chart-5: oklch(0.45 0.1 260);
+  --sidebar: oklch(1 0 0 / 0.4);
+  --sidebar-foreground: oklch(0.24 0.03 268);
+  --sidebar-primary: oklch(0.5 0.19 278);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.93 0.03 275 / 0.7);
+  --sidebar-accent-foreground: oklch(0.3 0.08 278);
+  --sidebar-border: oklch(1 0 0 / 0.4);
+  --sidebar-ring: oklch(0.5 0.19 278);
+  --shadow-2xs: 0px 2px 8px 0px hsl(255 40% 30% / 0.04);
+  --shadow-xs: 0px 2px 8px 0px hsl(255 40% 30% / 0.04);
+  --shadow-sm: 0px 4px 16px 0px hsl(255 40% 30% / 0.08), 0px 1px 2px -1px hsl(255 40% 30% / 0.08);
+  --shadow: 0px 4px 16px 0px hsl(255 40% 30% / 0.08), 0px 1px 2px -1px hsl(255 40% 30% / 0.08);
+  --shadow-md: 0px 6px 20px 0px hsl(255 40% 30% / 0.1), 0px 2px 4px -1px hsl(255 40% 30% / 0.08);
+  --shadow-lg: 0px 8px 28px 0px hsl(255 40% 30% / 0.12), 0px 4px 6px -1px hsl(255 40% 30% / 0.08);
+  --shadow-xl: 0px 12px 36px 0px hsl(255 40% 30% / 0.14), 0px 8px 10px -1px hsl(255 40% 30% / 0.08);
+  --shadow-2xl: 0px 16px 48px 0px hsl(255 40% 30% / 0.2);
+}
+
+.dark:root[data-theme-preset="glass"] {
+  --background: oklch(0.15 0.025 268 / 0.5);
+  --foreground: oklch(0.94 0.008 260);
+  --card: oklch(0.28 0.04 272 / 0.45);
+  --card-foreground: oklch(0.94 0.008 260);
+  --popover: oklch(0.24 0.035 270 / 0.8);
+  --popover-foreground: oklch(0.94 0.008 260);
+  --primary: oklch(0.72 0.14 278);
+  --primary-foreground: oklch(0.15 0.03 270);
+  --secondary: oklch(0.32 0.045 272 / 0.55);
+  --secondary-foreground: oklch(0.92 0.01 260);
+  --muted: oklch(0.3 0.04 270 / 0.5);
+  --muted-foreground: oklch(0.7 0.02 265);
+  --accent: oklch(0.38 0.07 275 / 0.6);
+  --accent-foreground: oklch(0.9 0.04 275);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 0.12);
+  --input: oklch(1 0 0 / 0.14);
+  --ring: oklch(0.72 0.14 278);
+  --chart-1: oklch(0.72 0.14 278);
+  --chart-2: oklch(0.75 0.1 200);
+  --chart-3: oklch(0.7 0.14 330);
+  --chart-4: oklch(0.78 0.12 92);
+  --chart-5: oklch(0.6 0.1 260);
+  --sidebar: oklch(0.2 0.03 270 / 0.45);
+  --sidebar-foreground: oklch(0.94 0.008 260);
+  --sidebar-primary: oklch(0.72 0.14 278);
+  --sidebar-primary-foreground: oklch(0.15 0.03 270);
+  --sidebar-accent: oklch(0.36 0.06 275 / 0.6);
+  --sidebar-accent-foreground: oklch(0.9 0.04 275);
+  --sidebar-border: oklch(1 0 0 / 0.1);
+  --sidebar-ring: oklch(0.72 0.14 278);
+  --shadow-2xs: 0px 2px 8px 0px hsl(0 0% 0% / 0.15);
+  --shadow-xs: 0px 2px 8px 0px hsl(0 0% 0% / 0.15);
+  --shadow-sm: 0px 4px 16px 0px hsl(0 0% 0% / 0.25), 0px 1px 2px -1px hsl(0 0% 0% / 0.2);
+  --shadow: 0px 4px 16px 0px hsl(0 0% 0% / 0.25), 0px 1px 2px -1px hsl(0 0% 0% / 0.2);
+  --shadow-md: 0px 6px 20px 0px hsl(0 0% 0% / 0.3), 0px 2px 4px -1px hsl(0 0% 0% / 0.2);
+  --shadow-lg: 0px 8px 28px 0px hsl(0 0% 0% / 0.35), 0px 4px 6px -1px hsl(0 0% 0% / 0.2);
+  --shadow-xl: 0px 12px 36px 0px hsl(0 0% 0% / 0.4), 0px 8px 10px -1px hsl(0 0% 0% / 0.2);
+  --shadow-2xl: 0px 16px 48px 0px hsl(0 0% 0% / 0.5);
+}
+
+/* Fondo con degradados suaves: es lo que se percibe a través del "vidrio" */
+:root[data-theme-preset="glass"] body {
+  background:
+    radial-gradient(1100px 620px at 12% -5%, oklch(0.88 0.07 278 / 0.6), transparent 60%),
+    radial-gradient(950px 550px at 88% 15%, oklch(0.9 0.06 200 / 0.55), transparent 60%),
+    radial-gradient(900px 620px at 50% 110%, oklch(0.91 0.06 330 / 0.45), transparent 60%),
+    oklch(0.965 0.008 260);
+  background-attachment: fixed;
+}
+
+.dark:root[data-theme-preset="glass"] body {
+  background:
+    radial-gradient(1100px 620px at 12% -5%, oklch(0.32 0.09 278 / 0.55), transparent 60%),
+    radial-gradient(950px 550px at 88% 15%, oklch(0.28 0.07 210 / 0.5), transparent 60%),
+    radial-gradient(900px 620px at 50% 110%, oklch(0.3 0.08 330 / 0.35), transparent 60%),
+    oklch(0.13 0.02 268);
+  background-attachment: fixed;
+}
+
+/* Desenfoque tipo vidrio esmerilado en superficies elevadas */
+:root[data-theme-preset="glass"]
+  :is(
+    [data-slot="card"],
+    [data-slot="sidebar-inner"],
+    [data-slot="popover-content"],
+    [data-slot="dropdown-menu-content"],
+    [data-slot="select-content"],
+    [data-slot="dialog-content"],
+    [data-slot="alert-dialog-content"],
+    [data-slot="sheet-content"],
+    [data-slot="hover-card-content"],
+    [data-slot="context-menu-content"],
+    [data-slot="tooltip-content"]
+  ) {
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+}
+
+/* Borde luminoso sutil en tarjetas para realzar el efecto cristal */
+:root[data-theme-preset="glass"] [data-slot="card"] {
+  border-color: var(--border);
+  box-shadow:
+    inset 0 1px 0 0 oklch(1 0 0 / 0.35),
+    var(--shadow);
+}
+
+.dark:root[data-theme-preset="glass"] [data-slot="card"] {
+  box-shadow:
+    inset 0 1px 0 0 oklch(1 0 0 / 0.08),
+    var(--shadow);
+}

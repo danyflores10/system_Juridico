@@ -6,6 +6,12 @@
 @import "../styles/presets/brutalist.css";
 @import "../styles/presets/soft-pop.css";
 @import "../styles/presets/tangerine.css";
+@import "../styles/presets/legal-gold.css";
+@import "../styles/presets/emerald.css";
+@import "../styles/presets/burgundy.css";
+@import "../styles/presets/sapphire.css";
+@import "../styles/presets/midnight.css";
+@import "../styles/presets/glass.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -250,6 +256,76 @@ These serve as the fallback; there is no separate default.css file. */
 
 html {
   overscroll-behavior: none;
+}
+
+/* Borde con gradiente animado en los colores de Google (botón "Continuar con Google"). */
+@property --google-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes google-border-spin {
+  to {
+    --google-angle: 360deg;
+  }
+}
+
+.google-gradient-border {
+  background: conic-gradient(from var(--google-angle), #ea4335, #fbbc05 25%, #34a853 50%, #4285f4 75%, #ea4335);
+  animation: google-border-spin 4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .google-gradient-border {
+    animation: none;
+  }
+}
+
+/* Barras de progreso del motor de fuentes: brillo deslizante y modo indeterminado. */
+@keyframes progress-shimmer {
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.progress-shimmer {
+  animation: progress-shimmer 1.9s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 110%;
+  }
+}
+
+.progress-indeterminate {
+  animation: progress-indeterminate 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-shimmer,
+  .progress-indeterminate {
+    animation: none;
+  }
+}
+
+/* Cursor parpadeante del efecto máquina de escribir. */
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .disable-transitions * {

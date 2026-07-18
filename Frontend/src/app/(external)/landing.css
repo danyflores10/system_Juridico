@@ -1,0 +1,206 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Inter:wght@300;400;500;600;700&display=swap");
+
+/*
+  Estilos exclusivos de la landing pública de Consultor Jurídico.
+  Todo está bajo el prefijo .lj- para no interferir con el tema del dashboard.
+*/
+
+.lj-landing {
+  --lj-bg: #081020;
+  --lj-bg-alt: #0b1628;
+  --lj-card: #0f1c33;
+  --lj-border: #1c2a47;
+  --lj-gold: #d4af37;
+  --lj-gold-bright: #e2c04d;
+
+  background: var(--lj-bg);
+  color: #ffffff;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* Desplazamiento suave y barra de scroll dorada solo cuando la landing está visible */
+html:has(.lj-landing) {
+  scroll-behavior: smooth;
+}
+
+html:has(.lj-landing)::-webkit-scrollbar {
+  width: 9px;
+}
+
+html:has(.lj-landing)::-webkit-scrollbar-track {
+  background: linear-gradient(to bottom, #081020, #0b1628);
+  border-left: 1px solid rgba(212, 175, 55, 0.12);
+}
+
+html:has(.lj-landing)::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #e2c04d 0%, #d4af37 45%, #a8862a 100%);
+  border-radius: 8px;
+  border: 2px solid #081020;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+html:has(.lj-landing)::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #f0d06a 0%, #e2c04d 45%, #d4af37 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 0 10px rgba(212, 175, 55, 0.55);
+}
+
+html:has(.lj-landing)::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #d4af37 0%, #c19c30 50%, #a8862a 100%);
+}
+
+/* Firefox */
+html:has(.lj-landing) {
+  scrollbar-width: thin;
+  scrollbar-color: #d4af37 #081020;
+}
+
+.lj-landing ::selection {
+  background: #d4af37;
+  color: #081020;
+}
+
+/* Tipografía de títulos */
+.lj-font-heading {
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+}
+
+/* Ritmo vertical de las secciones */
+.lj-section {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+  .lj-section {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .lj-section {
+    padding-top: 7.5rem;
+    padding-bottom: 7.5rem;
+  }
+}
+
+/* Contenedor principal */
+.lj-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .lj-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .lj-container {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .lj-container {
+    padding-left: 6rem;
+    padding-right: 6rem;
+  }
+}
+
+/* Marquesina de áreas de práctica */
+@keyframes lj-marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.lj-marquee {
+  animation: lj-marquee 28s linear infinite;
+}
+
+/* Texto con degradado dorado */
+.lj-gradient-gold {
+  background: linear-gradient(135deg, #e2c04d 0%, #d4af37 45%, #a8862a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Resplandor dorado */
+.lj-glow-gold {
+  box-shadow:
+    0 0 20px rgba(212, 175, 55, 0.3),
+    0 0 60px rgba(212, 175, 55, 0.1);
+}
+
+/* Degradado superpuesto para imágenes */
+.lj-img-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 30%, rgba(8, 16, 32, 0.8) 100%);
+}
+
+/* Textura sutil de ruido */
+.lj-noise-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Haz de luz que recorre el borde de una tarjeta (border beam) */
+@property --lj-beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.lj-border-beam {
+  padding: 1.5px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--lj-beam-angle),
+    transparent 0deg,
+    transparent 280deg,
+    rgba(212, 175, 55, 0.35) 320deg,
+    #d4af37 345deg,
+    #ffe9a3 356deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: lj-border-beam-spin 5s linear infinite;
+}
+
+@keyframes lj-border-beam-spin {
+  to {
+    --lj-beam-angle: 360deg;
+  }
+}
+
+/* Contenido de acordeón (FAQ) */
+.lj-accordion-content {
+  overflow: hidden;
+  transition: height 0.3s ease;
+}

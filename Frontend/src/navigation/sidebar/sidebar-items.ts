@@ -4,6 +4,8 @@ import {
   ChartBar,
   CheckSquare,
   ClipboardCheck,
+  CreditCard,
+  FileDiff,
   FileText,
   Fingerprint,
   Forklift,
@@ -19,6 +21,7 @@ import {
   Mail,
   MessageSquare,
   ReceiptText,
+  Search,
   Server,
   ShoppingBag,
   SquareArrowUpRight,
@@ -44,6 +47,8 @@ interface NavItemBase {
   badge?: NavBadge;
   disabled?: boolean;
   newTab?: boolean;
+  /** Visible únicamente para cuentas con rol administrador. */
+  adminOnly?: boolean;
 }
 
 export interface NavMainLinkItem extends NavItemBase {
@@ -61,6 +66,17 @@ export interface NavGroup {
   id: number;
   label?: string;
   items: NavMainItem[];
+}
+
+/** Filtra los grupos del menú según el rol del usuario autenticado. */
+export function filtrarSidebarPorRol(grupos: NavGroup[], esAdmin: boolean): NavGroup[] {
+  if (esAdmin) return grupos;
+  return grupos
+    .map((grupo) => ({
+      ...grupo,
+      items: grupo.items.filter((item) => !item.adminOnly),
+    }))
+    .filter((grupo) => grupo.items.length > 0);
 }
 
 export const sidebarItems: NavGroup[] = [
@@ -85,6 +101,50 @@ export const sidebarItems: NavGroup[] = [
         title: "Revisión jurídica",
         url: "/dashboard/revision-juridica",
         icon: ClipboardCheck,
+      },
+      {
+        id: "web-sources",
+        title: "Cargador jurídico",
+        url: "/dashboard/fuentes",
+        icon: Globe2,
+      },
+      {
+        id: "legal-catalogs",
+        title: "Catálogos jurídicos",
+        icon: LibraryBig,
+        subItems: [
+          { id: "catalog-overview", title: "Administrar catálogos", url: "/dashboard/catalogos" },
+          { id: "catalog-matters", title: "Materias", url: "/dashboard/catalogos/materias" },
+          { id: "catalog-rule-types", title: "Tipos de norma", url: "/dashboard/catalogos/tipos-norma" },
+          { id: "catalog-effects", title: "Efectos normativos", url: "/dashboard/catalogos/efectos" },
+          { id: "catalog-entities", title: "Entidades emisoras", url: "/dashboard/catalogos/entidades" },
+        ],
+      },
+      {
+        id: "modificador",
+        title: "Modificador jurídico",
+        url: "/dashboard/modificador",
+        icon: FileDiff,
+      },
+      {
+        id: "buscador",
+        title: "Buscador jurídico",
+        url: "/dashboard/buscador",
+        icon: Search,
+      },
+      {
+        id: "users",
+        title: "Usuarios",
+        url: "/dashboard/users",
+        icon: Users,
+        adminOnly: true,
+      },
+      {
+        id: "subscribers",
+        title: "Suscriptores",
+        url: "/dashboard/suscriptores",
+        icon: CreditCard,
+        adminOnly: true,
       },
       {
         id: "crm",
@@ -133,7 +193,6 @@ export const sidebarItems: NavGroup[] = [
         title: "Infraestructura",
         url: "/dashboard/infrastructure",
         icon: Server,
-        badge: "new",
       },
     ],
   },
@@ -170,7 +229,6 @@ export const sidebarItems: NavGroup[] = [
         title: "Tareas",
         url: "/dashboard/tasks",
         icon: CheckSquare,
-        badge: "new",
       },
       {
         id: "invoice",
@@ -179,16 +237,11 @@ export const sidebarItems: NavGroup[] = [
         icon: ReceiptText,
       },
       {
-        id: "users",
-        title: "Usuarios",
-        url: "/dashboard/users",
-        icon: Users,
-      },
-      {
         id: "roles",
         title: "Roles",
         url: "/dashboard/roles",
         icon: Lock,
+        adminOnly: true,
       },
       {
         id: "authentication",
@@ -199,30 +252,6 @@ export const sidebarItems: NavGroup[] = [
           { id: "auth-login-v2", title: "Inicio de sesión v2", url: "/auth/v2/login", newTab: true },
           { id: "auth-register-v1", title: "Registro v1", url: "/auth/v1/register", newTab: true },
           { id: "auth-register-v2", title: "Registro v2", url: "/auth/v2/register", newTab: true },
-        ],
-      },
-    ],
-  },
-  {
-    id: 3,
-    label: "Configuración",
-    items: [
-      {
-        id: "web-sources",
-        title: "Cargador jurídico",
-        url: "/dashboard/fuentes",
-        icon: Globe2,
-      },
-      {
-        id: "legal-catalogs",
-        title: "Catálogos jurídicos",
-        icon: LibraryBig,
-        subItems: [
-          { id: "catalog-overview", title: "Administrar catálogos", url: "/dashboard/catalogos" },
-          { id: "catalog-matters", title: "Materias", url: "/dashboard/catalogos/materias" },
-          { id: "catalog-rule-types", title: "Tipos de norma", url: "/dashboard/catalogos/tipos-norma" },
-          { id: "catalog-effects", title: "Efectos normativos", url: "/dashboard/catalogos/efectos" },
-          { id: "catalog-entities", title: "Entidades emisoras", url: "/dashboard/catalogos/entidades" },
         ],
       },
     ],

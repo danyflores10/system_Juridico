@@ -1,6 +1,9 @@
 "use client";
 
-import { CircleUser, CreditCard, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { CircleUser, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -13,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
-import { getInitials } from "@/lib/utils";
+import { colorAvatar, inicialesAvatar } from "@/lib/avatar";
 
 export function NavUser({
   user,
@@ -25,6 +28,13 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
+    router.replace("/auth/v2/login");
+    router.refresh();
+  };
 
   return (
     <SidebarMenu>
@@ -35,9 +45,14 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={user.avatar || undefined} alt={user.name} />
-                <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarImage src={user.avatar || undefined} alt={user.name} className="object-cover" />
+                <AvatarFallback
+                  className="rounded-lg font-semibold text-white"
+                  style={{ backgroundColor: colorAvatar(user.name || user.email) }}
+                >
+                  {inicialesAvatar(user.name, user.email)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -56,7 +71,12 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar || undefined} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
+                  <AvatarFallback
+                    className="rounded-lg font-semibold text-white"
+                    style={{ backgroundColor: colorAvatar(user.name || user.email) }}
+                  >
+                    {inicialesAvatar(user.name, user.email)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
@@ -66,21 +86,21 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <CircleUser />
-                Cuenta
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/cuenta">
+                  <CircleUser />
+                  Cuenta
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Honorarios
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <MessageSquareDot />
-                Notificaciones
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/cuenta">
+                  <MessageSquareDot />
+                  Notificaciones
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Cerrar sesión
             </DropdownMenuItem>

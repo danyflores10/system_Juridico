@@ -2,13 +2,14 @@
 
 Plataforma web profesional para gestión jurídica, seguimiento de expedientes, clientes, audiencias, tareas, documentos y honorarios. Está construida con Next.js, React, TypeScript y Tailwind CSS.
 
-La versión actual funciona como una demostración frontend completa y no requiere base de datos. El inicio de sesión y el registro validan los formularios y redirigen al panel principal usando datos locales.
+El inicio de sesión y el registro validan los formularios y redirigen al panel principal usando datos locales. El **Módulo 3: Buscador Jurídico** ya está conectado a PostgreSQL (base de datos `systemJuridico`).
 
 ## Requisitos
 
 - Git
 - Node.js 20 o superior
 - npm, incluido con Node.js
+- PostgreSQL 18 (para el Buscador Jurídico)
 
 ## Clonar el repositorio
 
@@ -60,9 +61,44 @@ SYSTEM JURIDICO/
 +-- README.md
 ```
 
+## Módulo 3: Buscador Jurídico
+
+Buscador sobre la BIBLIOTECA normativa (carpetas **Normativa emitida** y **Normativa actualizada**) con los criterios: tipo de norma, número, rango de fecha de promulgación, título, materia y **objeto o contenido resumido** (búsqueda de texto completo en español, sin distinción de tildes, dentro del contenido de cada archivo).
+
+Los archivos siguen la nomenclatura:
+
+```text
+Efecto; TipoNorma; Número; FechaPromulgación; Título; Objeto(Resumido); Materia.pdf
+```
+
+Preparación (una sola vez, con PostgreSQL en ejecución):
+
+```bash
+cd Frontend
+npm install
+npm run db:setup   # crea las tablas y la búsqueda de texto completo en systemJuridico
+npm run db:seed    # carga normativa boliviana de ejemplo (PDFs generados)
+npm run dev
+```
+
+Luego abre `http://localhost:3000/dashboard/buscador`.
+
+Características principales:
+
+- Opción **gratuita** (solo abre documentos de Normativa emitida) y **suscripción** (acceso irrestricto; la Normativa actualizada tiene restricción de copia de texto).
+- Visor de PDF integrado con zoom, paginación y bloqueo de copia/menú contextual para documentos restringidos.
+- Botón **Capturar imagen**: genera un PNG de la página visible con el logo de la empresa como marca de agua para evitar la piratería.
+- Carga de nuevos documentos a la biblioteca con validación en vivo de la nomenclatura.
+
 ## Variables de entorno
 
-Actualmente no se requieren variables de entorno. Cuando se incorpore una API, autenticación real o una base de datos, las credenciales deberán guardarse en `Frontend/.env.local` o en el archivo de entorno correspondiente del backend. Los archivos `.env` nunca deben subirse al repositorio.
+La conexión a la base de datos se define en `Frontend/.env.local` (ver `Frontend/.env.example`):
+
+```text
+DATABASE_URL=postgresql://postgres:123456789@localhost:5432/systemJuridico
+```
+
+Los archivos `.env` nunca deben subirse al repositorio.
 
 ## Flujo de acceso actual
 
