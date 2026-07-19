@@ -133,29 +133,77 @@ const MASCARA_LENTE = [
 
 export function useLenteLectura(activa: boolean) {
   const lenteRef = React.useRef<HTMLDivElement | null>(null);
-  const dentroRef = React.useRef(false);
-  const [dentro, setDentro] = React.useState(false);
+  const contenedorRef = React.useRef<HTMLDivElement | null>(null);
+  // Coincidencia de búsqueda que la franja debe seguir (además del puntero).
+  const coincidenciaRef = React.useRef<HTMLElement | null>(null);
+  const punteroYRef = React.useRef<number | null>(null);
+  const [revelando, setRevelando] = React.useState(false);
+
+  const aplicarY = React.useCallback((y: number | null) => {
+    lenteRef.current?.style.setProperty("--lente-y", y === null ? "-9999px" : `${Math.round(y)}px`);
+    setRevelando(y !== null);
+  }, []);
+
+  // El puntero manda; si no hay puntero encima, la franja sigue la coincidencia
+  // de búsqueda actual mientras esté dentro del área visible.
+  const recalcular = React.useCallback(() => {
+    if (!activa) {
+      aplicarY(null);
+      return;
+    }
+    if (punteroYRef.current !== null) {
+      aplicarY(punteroYRef.current);
+      return;
+    }
+    const contenedor = contenedorRef.current;
+    const elemento = coincidenciaRef.current;
+    if (contenedor && elemento) {
+      const rectContenedor = contenedor.getBoundingClientRect();
+      const rectElemento = elemento.getBoundingClientRect();
+      const y = rectElemento.top + rectElemento.height / 2 - rectContenedor.top;
+      aplicarY(y >= 0 && y <= rectContenedor.height ? y : null);
+      return;
+    }
+    aplicarY(null);
+  }, [activa, aplicarY]);
 
   const alMoverPuntero = React.useCallback(
     (evento: React.PointerEvent<HTMLElement>) => {
       if (!activa) return;
       const rect = evento.currentTarget.getBoundingClientRect();
-      lenteRef.current?.style.setProperty("--lente-y", `${Math.round(evento.clientY - rect.top)}px`);
-      if (!dentroRef.current) {
-        dentroRef.current = true;
-        setDentro(true);
-      }
+      punteroYRef.current = evento.clientY - rect.top;
+      aplicarY(punteroYRef.current);
     },
-    [activa],
+    [activa, aplicarY],
   );
 
   const alSalirPuntero = React.useCallback(() => {
-    lenteRef.current?.style.setProperty("--lente-y", "-9999px");
-    dentroRef.current = false;
-    setDentro(false);
-  }, []);
+    punteroYRef.current = null;
+    // Al soltar el puntero, vuelve a revelar la coincidencia de búsqueda si la hay.
+    recalcular();
+  }, [recalcular]);
 
-  return { lenteRef, dentro, alMoverPuntero, alSalirPuntero };
+  /** Fija la coincidencia de búsqueda a seguir (o null para dejar de seguirla). */
+  const seguirCoincidencia = React.useCallback(
+    (elemento: HTMLElement | null) => {
+      coincidenciaRef.current = elemento;
+      elemento?.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+      recalcular();
+    },
+    [recalcular],
+  );
+
+  // Mantiene la franja sobre la coincidencia durante el desplazamiento
+  // (incluido el scroll suave que la lleva al centro).
+  React.useEffect(() => {
+    const contenedor = contenedorRef.current;
+    if (!contenedor || !activa) return;
+    const alDesplazar = () => recalcular();
+    contenedor.addEventListener("scroll", alDesplazar, { passive: true });
+    return () => contenedor.removeEventListener("scroll", alDesplazar);
+  }, [activa, recalcular]);
+
+  return { lenteRef, contenedorRef, revelando, alMoverPuntero, alSalirPuntero, seguirCoincidencia, recalcular };
 }
 
 /** Capa difuminadora con la franja de lectura recortada mediante máscara CSS. */

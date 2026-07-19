@@ -23,6 +23,8 @@ interface PropiedadesVisor {
   plan: PlanAcceso;
   abierto: boolean;
   onOpenChange: (abierto: boolean) => void;
+  /** Término buscado por contenido: al abrir, salta directo a esa palabra dentro del documento. */
+  terminoInicial?: string;
 }
 
 type EstadoVisor = "cargando" | "listo" | "error";
@@ -150,7 +152,7 @@ function TextoResaltado({
   return <>{nodos}</>;
 }
 
-export function VisorDocumento({ documento, plan, abierto, onOpenChange }: PropiedadesVisor) {
+export function VisorDocumento({ documento, plan, abierto, onOpenChange, terminoInicial }: PropiedadesVisor) {
   const [estado, setEstado] = React.useState<EstadoVisor>("cargando");
   const [mensajeError, setMensajeError] = React.useState("");
   const [pagina, setPagina] = React.useState(1);
@@ -177,6 +179,10 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
   const busquedaVisibleRef = React.useRef(false);
   busquedaVisibleRef.current = busquedaVisible;
 
+  // Término de contenido con el que se abre el visor (se lee solo al cargar).
+  const terminoInicialRef = React.useRef(terminoInicial);
+  terminoInicialRef.current = terminoInicial;
+
   const esPdf = documento?.extension === "pdf";
   const restringido = documento?.carpeta === "ACTUALIZADA";
   const totalCoincidencias = esPdf ? coincidenciasPdf.length : rangosTexto.length;
@@ -190,13 +196,18 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
     if (!abierto || !documento) return;
 
     let cancelado = false;
+    // Si el documento se abrió tras una búsqueda por contenido, precarga ese
+    // término para saltar directo a la palabra en cuanto el documento esté listo.
+    const terminoApertura = (terminoInicialRef.current ?? "").trim();
+    const abrirConBusqueda = terminoApertura.length >= MINIMO_CONSULTA;
+
     setEstado("cargando");
     setMensajeError("");
     setTexto(null);
     setPagina(1);
     setTotalPaginas(0);
-    setBusquedaVisible(false);
-    setConsulta("");
+    setBusquedaVisible(abrirConBusqueda);
+    setConsulta(abrirConBusqueda ? terminoApertura : "");
     setCoincidenciasPdf([]);
     setRangosTexto([]);
     setIndiceActual(0);
@@ -405,10 +416,23 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
     [totalCoincidencias, esPdf, coincidenciasPdf],
   );
 
-  /** Al montarse el resaltado de la coincidencia actual, se desplaza hasta él. */
-  const marcarRefActual = React.useCallback((nodo: HTMLElement | null) => {
-    nodo?.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
-  }, []);
+  /**
+   * Al montarse el resaltado de la coincidencia actual, la lente se desplaza
+   * hasta él y revela (desborrosa) esa franja, siguiéndola durante el scroll.
+   */
+  const { seguirCoincidencia, recalcular: recalcularLente } = lente;
+  const marcarRefActual = React.useCallback(
+    (nodo: HTMLElement | null) => {
+      seguirCoincidencia(nodo);
+    },
+    [seguirCoincidencia],
+  );
+
+  // Reajusta la franja revelada cuando cambia el zoom (mueve la coincidencia sin scroll).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: se reejecuta a propósito al cambiar el zoom
+  React.useEffect(() => {
+    recalcularLente();
+  }, [escala, recalcularLente]);
 
   function abrirBusqueda() {
     setBusquedaVisible(true);
@@ -586,7 +610,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
 
           {estado === "listo" ? <LenteLectura lenteRef={lente.lenteRef} /> : null}
 
-          {estado === "listo" && !lente.dentro && !bloqueado ? (
+          {estado === "listo" && !lente.revelando && !bloqueado ? (
             <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center">
               <span className="rounded-full border bg-background/90 px-4 py-1.5 text-muted-foreground text-xs shadow-sm backdrop-blur-sm">
                 Vista protegida: mueva el cursor sobre el documento para leer
@@ -598,6 +622,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
 
           {/* biome-ignore lint/a11y/noStaticElementInteractions: bloqueo de copia/menú contextual exigido por el módulo para proteger los documentos */}
           <div
+            ref={lente.contenedorRef}
             className={cn("h-full select-none overflow-auto bg-muted/40 p-6", bloqueado && "blur-2xl")}
             onContextMenu={bloquearCopia}
             onCopy={bloquearCopia}

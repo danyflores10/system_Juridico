@@ -196,7 +196,13 @@ export function Buscador() {
         />
       </div>
 
-      <VisorDocumento documento={documentoVisor} plan={plan} abierto={visorAbierto} onOpenChange={setVisorAbierto} />
+      <VisorDocumento
+        documento={documentoVisor}
+        plan={plan}
+        abierto={visorAbierto}
+        onOpenChange={setVisorAbierto}
+        terminoInicial={ultimosCriterios.objeto}
+      />
       <DialogoCarga abierto={cargaAbierta} onOpenChange={setCargaAbierta} onCargado={refrescar} />
     </div>
   );
