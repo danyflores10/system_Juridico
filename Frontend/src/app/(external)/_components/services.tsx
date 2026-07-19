@@ -56,7 +56,7 @@ export function Services() {
     <section id="servicios" className="lj-section bg-[#081020]">
       <div className="lj-container">
         {/* Encabezado */}
-        <div className="mb-16 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div className="mb-10 flex flex-col justify-between gap-6 md:mb-16 md:flex-row md:items-end">
           <div>
             <FadeUp>
               <span className="mb-4 block font-semibold text-[#d4af37] text-xs uppercase tracking-[0.25em]">
@@ -91,7 +91,7 @@ export function Services() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
                 whileHover={{ backgroundColor: service.highlight ? "#1a2540" : "#0f1c33" }}
-                className={`group relative cursor-default p-8 transition-colors duration-300 ${
+                className={`group relative cursor-default p-6 transition-colors duration-300 sm:p-8 ${
                   service.highlight ? "bg-[#0f1c33]" : "bg-[#081020]"
                 }`}
               >

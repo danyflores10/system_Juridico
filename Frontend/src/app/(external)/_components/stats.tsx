@@ -28,7 +28,7 @@ export function Stats() {
       </div>
 
       <div className="lj-container relative z-10">
-        <div className="mb-16 text-center">
+        <div className="mb-10 text-center md:mb-16">
           <FadeUp>
             <span className="mb-4 block font-semibold text-[#d4af37] text-xs uppercase tracking-[0.25em]">
               Cifras que respaldan
@@ -51,7 +51,7 @@ export function Stats() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="group bg-[#081020] p-8 transition-colors duration-300 hover:bg-[#0f1c33] md:p-12"
+              className="group bg-[#081020] p-5 transition-colors duration-300 hover:bg-[#0f1c33] sm:p-8 md:p-12"
             >
               <AnimatedCounter
                 target={stat.value}
@@ -59,7 +59,7 @@ export function Stats() {
                 duration={2200}
                 className="lj-font-heading mb-2 block origin-left font-black text-4xl text-[#d4af37] leading-none transition-transform duration-300 group-hover:scale-105 sm:text-5xl"
               />
-              <p className="lj-font-heading mb-1 font-bold text-base text-white uppercase tracking-wide">
+              <p className="lj-font-heading mb-1 font-bold text-sm text-white uppercase tracking-wide sm:text-base">
                 {stat.label}
               </p>
               <p className="text-white/40 text-xs">{stat.description}</p>

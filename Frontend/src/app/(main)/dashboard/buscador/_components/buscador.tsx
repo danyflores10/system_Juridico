@@ -2,12 +2,13 @@
 
 import * as React from "react";
 
-import { BadgeCheck, FilePlus2, LockOpen, Scale } from "lucide-react";
+import { BadgeCheck, FilePlus2, FolderSync, LockOpen, Scale } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 import { DialogoCarga } from "./dialogo-carga";
 import { PanelCriterios } from "./panel-criterios";
@@ -27,6 +28,7 @@ export function Buscador() {
   const [documentoVisor, setDocumentoVisor] = React.useState<ResultadoNormativa | null>(null);
   const [visorAbierto, setVisorAbierto] = React.useState(false);
   const [cargaAbierta, setCargaAbierta] = React.useState(false);
+  const [sincronizando, setSincronizando] = React.useState(false);
 
   const planRef = React.useRef(plan);
   planRef.current = plan;
@@ -100,6 +102,48 @@ export function Buscador() {
     void cargarMaterias();
   }
 
+  async function sincronizarFinalizados() {
+    setSincronizando(true);
+    try {
+      const respuesta = await fetch("/api/biblioteca/sincronizar-finalizados", { method: "POST" });
+      const datos: {
+        incorporados?: number;
+        omitidos?: number;
+        errores?: { documento: string; motivo: string }[];
+        error?: string;
+      } = await respuesta.json();
+
+      if (!respuesta.ok) {
+        toast.error(datos.error ?? "No fue posible sincronizar el archivo finalizado.");
+        return;
+      }
+
+      const incorporados = datos.incorporados ?? 0;
+      const errores = datos.errores ?? [];
+
+      if (incorporados > 0) {
+        toast.success(`${incorporados} documento(s) del archivo finalizado incorporados a la biblioteca.`, {
+          description: "Ya puede encontrarlos con los criterios de búsqueda del módulo.",
+        });
+        refrescar();
+      } else if (errores.length === 0) {
+        toast.info("La biblioteca ya está al día.", {
+          description: `Los ${datos.omitidos ?? 0} documento(s) finalizados ya estaban incorporados.`,
+        });
+      }
+
+      if (errores.length > 0) {
+        toast.warning(`${errores.length} documento(s) no se pudieron incorporar.`, {
+          description: errores.map((error) => `${error.documento}: ${error.motivo}`).join(" "),
+        });
+      }
+    } catch {
+      toast.error("No fue posible comunicarse con el servidor.");
+    } finally {
+      setSincronizando(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <Card>
@@ -126,6 +170,10 @@ export function Buscador() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+            <Button size="sm" variant="outline" onClick={() => void sincronizarFinalizados()} disabled={sincronizando}>
+              <FolderSync className={cn("size-4", sincronizando && "animate-pulse")} />
+              {sincronizando ? "Sincronizando…" : "Sincronizar finalizados"}
+            </Button>
             <Button size="sm" onClick={() => setCargaAbierta(true)}>
               <FilePlus2 className="size-4" /> Agregar a biblioteca
             </Button>

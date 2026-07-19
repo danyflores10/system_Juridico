@@ -15,7 +15,7 @@ const heroStats = [
 
 export function Hero() {
   return (
-    <section id="inicio" className="relative flex min-h-screen items-center overflow-hidden bg-[#081020]">
+    <section id="inicio" className="relative flex min-h-svh items-center overflow-hidden bg-[#081020]">
       {/* Imagen de fondo */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -35,7 +35,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-12 mb-8 inline-flex items-center gap-2 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/5 px-4 py-2 backdrop-blur-sm"
+          className="mt-6 mb-8 inline-flex items-center gap-2 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/5 px-4 py-2 backdrop-blur-sm sm:mt-12"
         >
           <Scale size={14} className="text-[#d4af37]" />
           <span className="font-medium text-[#d4af37] text-xs uppercase tracking-widest">
@@ -88,12 +88,12 @@ export function Hero() {
             Consultoría jurídica integral para personas y empresas: gestión de clientes, casos, documentos legales,
             citas y reportes en una sola plataforma segura.
           </p>
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
             <motion.a
               href={LOGIN_URL}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              className="lj-font-heading group flex items-center gap-2 rounded-full bg-[#d4af37] px-6 py-3 font-bold text-[#081020] text-sm uppercase tracking-wider transition-shadow duration-300 hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]"
+              className="lj-font-heading group flex w-full items-center justify-center gap-2 rounded-full bg-[#d4af37] px-6 py-3.5 font-bold text-[#081020] text-sm uppercase tracking-wider transition-shadow duration-300 hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] sm:w-auto sm:py-3"
             >
               Ingresar al sistema
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -102,7 +102,7 @@ export function Hero() {
               href="#servicios"
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              className="lj-font-heading rounded-full border border-white/20 px-6 py-3 font-bold text-sm text-white uppercase tracking-wider transition-colors duration-200 hover:border-white/50"
+              className="lj-font-heading flex w-full items-center justify-center rounded-full border border-white/20 px-6 py-3.5 font-bold text-sm text-white uppercase tracking-wider transition-colors duration-200 hover:border-white/50 sm:w-auto sm:py-3"
             >
               Ver servicios
             </motion.a>
@@ -114,7 +114,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 1.05 }}
-          className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-6 border-white/10 border-t pt-8 sm:gap-x-12 md:mt-16"
+          className="mt-12 grid grid-cols-3 gap-3 border-white/10 border-t pt-8 sm:flex sm:flex-wrap sm:items-center sm:gap-x-12 sm:gap-y-6 md:mt-16"
         >
           {heroStats.map((stat) => (
             <div key={stat.label} className="flex flex-col">

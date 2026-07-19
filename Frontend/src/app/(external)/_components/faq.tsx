@@ -103,7 +103,7 @@ export function Faq() {
   return (
     <section id="contacto" className="lj-section bg-[#081020]">
       <div className="lj-container">
-        <div className="grid grid-cols-1 gap-20 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-20">
           {/* Preguntas frecuentes */}
           <div>
             <FadeUp>
@@ -127,7 +127,7 @@ export function Faq() {
 
           {/* Formulario de contacto */}
           <SlideIn direction="right">
-            <div className="rounded-2xl border border-[#16233d] bg-[#0f1c33] p-8 md:p-10">
+            <div className="rounded-2xl border border-[#16233d] bg-[#0f1c33] p-6 sm:p-8 md:p-10">
               <span className="mb-4 block font-semibold text-[#d4af37] text-xs uppercase tracking-[0.25em]">
                 Contáctenos
               </span>
@@ -171,7 +171,7 @@ export function Faq() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Ej.: María Fernández"
-                        className="w-full rounded-xl border border-[#1c2a47] bg-[#081020] px-4 py-3 text-sm text-white transition-colors placeholder:text-white/40 focus:border-[#d4af37]/50 focus:outline-none"
+                        className="w-full rounded-xl border border-[#1c2a47] bg-[#081020] px-4 py-3 text-base text-white transition-colors placeholder:text-white/40 focus:border-[#d4af37]/50 focus:outline-none sm:text-sm"
                       />
                     </div>
                     <div>
@@ -188,7 +188,7 @@ export function Faq() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="maria@correo.com"
-                        className="w-full rounded-xl border border-[#1c2a47] bg-[#081020] px-4 py-3 text-sm text-white transition-colors placeholder:text-white/40 focus:border-[#d4af37]/50 focus:outline-none"
+                        className="w-full rounded-xl border border-[#1c2a47] bg-[#081020] px-4 py-3 text-base text-white transition-colors placeholder:text-white/40 focus:border-[#d4af37]/50 focus:outline-none sm:text-sm"
                       />
                     </div>
                   </div>
@@ -207,7 +207,7 @@ export function Faq() {
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder="Cuéntenos brevemente su caso o consulta legal..."
-                      className="w-full resize-none rounded-xl border border-[#1c2a47] bg-[#081020] px-4 py-3 text-sm text-white transition-colors placeholder:text-white/40 focus:border-[#d4af37]/50 focus:outline-none"
+                      className="w-full resize-none rounded-xl border border-[#1c2a47] bg-[#081020] px-4 py-3 text-base text-white transition-colors placeholder:text-white/40 focus:border-[#d4af37]/50 focus:outline-none sm:text-sm"
                     />
                   </div>
 

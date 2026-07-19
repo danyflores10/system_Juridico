@@ -2,19 +2,8 @@
 
 import * as React from "react";
 
-import {
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  FileX2,
-  ImageDown,
-  Search,
-  ShieldAlert,
-  ZoomIn,
-  ZoomOut,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, FileX2, Search, ShieldAlert, ZoomIn, ZoomOut } from "lucide-react";
 import type { PDFDocumentLoadingTask, PDFDocumentProxy, RenderTask } from "pdfjs-dist";
-import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +15,7 @@ import { buscarCoincidencias, type RangoCoincidencia } from "@/lib/texto-busqued
 import { cn } from "@/lib/utils";
 
 import { BarraBusquedaVisor, MINIMO_CONSULTA } from "./barra-busqueda-visor";
-import { canvasDesdeTexto, componerCaptura, descargarCanvas } from "./marca-agua";
+import { EscudoCaptura, LenteLectura, useLenteLectura, useProteccionCaptura } from "./proteccion-captura";
 import type { PlanAcceso, ResultadoNormativa } from "./tipos";
 
 interface PropiedadesVisor {
@@ -191,6 +180,10 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
   const esPdf = documento?.extension === "pdf";
   const restringido = documento?.carpeta === "ACTUALIZADA";
   const totalCoincidencias = esPdf ? coincidenciasPdf.length : rangosTexto.length;
+
+  // Protección anti-captura activa mientras el visor esté abierto.
+  const { motivo, bloqueado, continuar } = useProteccionCaptura(abierto);
+  const lente = useLenteLectura(abierto && estado === "listo");
 
   // Carga del documento al abrir el visor.
   React.useEffect(() => {
@@ -441,45 +434,19 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
     return lista;
   }, [busquedaVisible, esPdf, coincidenciasPdf, pagina, indiceActual]);
 
-  function capturarPantalla() {
-    if (!documento) return;
-
-    let origen: HTMLCanvasElement | null = null;
-    if (esPdf) {
-      origen = canvasRef.current;
-    } else if (texto !== null) {
-      origen = canvasDesdeTexto(texto, documento.titulo);
-    }
-
-    if (!origen) {
-      toast.error("No hay contenido para capturar.");
-      return;
-    }
-
-    const captura = componerCaptura(origen);
-    descargarCanvas(captura, `Captura - ${documento.titulo}.png`);
-    toast.success("Captura generada", {
-      description: "La imagen incluye el logo de la empresa como fondo de protección.",
-    });
-  }
-
-  function descargarOriginal() {
-    if (documento?.carpeta !== "EMITIDA") return;
-    const enlace = document.createElement("a");
-    enlace.href = `/api/biblioteca/documentos/${documento.id}/archivo?plan=${plan}&descarga=1`;
-    enlace.download = documento.nombreArchivo;
-    enlace.click();
-  }
-
+  /**
+   * Copia, arrastre y menú contextual vetados en todo documento del visor:
+   * "Guardar imagen como…" o Ctrl+C copiarían el contenido renderizado.
+   */
   function bloquearCopia(evento: React.SyntheticEvent) {
-    if (restringido) evento.preventDefault();
+    evento.preventDefault();
   }
 
   if (!documento) return null;
 
   return (
     <Dialog open={abierto} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[90vh] flex-col gap-0 p-0 sm:max-w-6xl">
+      <DialogContent className="flex h-[90vh] flex-col gap-0 p-0 sm:max-w-6xl print:hidden">
         <DialogHeader className="gap-2 border-b px-6 py-4">
           <DialogTitle className="pr-8 text-base leading-snug">{documento.titulo}</DialogTitle>
           <DialogDescription className="sr-only">Visor del documento {documento.nombreArchivo}</DialogDescription>
@@ -575,16 +542,6 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
               <Search className="size-3.5" />
               Buscar
             </Button>
-            <Button variant="outline" size="sm" disabled={estado !== "listo"} onClick={capturarPantalla}>
-              <ImageDown className="size-3.5" />
-              Capturar imagen
-            </Button>
-            {documento.carpeta === "EMITIDA" ? (
-              <Button variant="outline" size="sm" onClick={descargarOriginal}>
-                <Download className="size-3.5" />
-                Descargar
-              </Button>
-            ) : null}
           </div>
         </div>
 
@@ -607,7 +564,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
               onSiguiente={() => irACoincidencia(indiceActual + 1)}
               onCerrar={() => setBusquedaVisible(false)}
               inputRef={inputBusquedaRef}
-              className="absolute inset-x-3 top-3 z-20 sm:inset-x-auto sm:right-6 sm:w-96"
+              className="absolute inset-x-3 top-3 z-25 sm:inset-x-auto sm:right-6 sm:w-96"
             />
           ) : null}
 
@@ -627,11 +584,27 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange }: Propi
             </div>
           ) : null}
 
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: bloqueo de copia/menú contextual exigido por el módulo para la normativa actualizada */}
+          {estado === "listo" ? <LenteLectura lenteRef={lente.lenteRef} /> : null}
+
+          {estado === "listo" && !lente.dentro && !bloqueado ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center">
+              <span className="rounded-full border bg-background/90 px-4 py-1.5 text-muted-foreground text-xs shadow-sm backdrop-blur-sm">
+                Vista protegida: mueva el cursor sobre el documento para leer
+              </span>
+            </div>
+          ) : null}
+
+          <EscudoCaptura motivo={motivo} onContinuar={continuar} />
+
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: bloqueo de copia/menú contextual exigido por el módulo para proteger los documentos */}
           <div
-            className={cn("h-full overflow-auto bg-muted/40 p-6", restringido && "select-none")}
+            className={cn("h-full select-none overflow-auto bg-muted/40 p-6", bloqueado && "blur-2xl")}
             onContextMenu={bloquearCopia}
             onCopy={bloquearCopia}
+            onDragStart={bloquearCopia}
+            onPointerMove={lente.alMoverPuntero}
+            onPointerDown={lente.alMoverPuntero}
+            onPointerLeave={lente.alSalirPuntero}
           >
             {estado === "cargando" ? (
               <div className="flex h-full items-center justify-center">

@@ -71,7 +71,7 @@ export function Testimonials() {
   return (
     <section id="testimonios" className="lj-section bg-[#081020]">
       <div className="lj-container">
-        <div className="mb-16 text-center">
+        <div className="mb-10 text-center md:mb-16">
           <FadeUp>
             <span className="mb-4 block font-semibold text-[#d4af37] text-xs uppercase tracking-[0.25em]">
               Testimonios

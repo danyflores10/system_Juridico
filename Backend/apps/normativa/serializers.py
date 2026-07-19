@@ -259,13 +259,17 @@ class ArchivoJuridicoFinalizadoSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     fecha_finalizacion = serializers.SerializerMethodField()
+    tipo_norma_abreviatura = serializers.SerializerMethodField()
+    efecto_normativo_abreviatura = serializers.SerializerMethodField()
 
     class Meta:
         model = Documento
         fields = (
             'id', 'uuid', 'codigo_interno', 'tipo_norma',
             'efecto_normativo', 'materia', 'numero', 'fecha_emision',
-            'titulo', 'objeto_resumido', 'fecha_finalizacion', 'conversion',
+            'titulo', 'titulo_archivo', 'objeto_resumido',
+            'tipo_norma_abreviatura', 'efecto_normativo_abreviatura',
+            'fecha_finalizacion', 'conversion',
         )
 
     def get_fecha_finalizacion(self, obj):
@@ -273,6 +277,12 @@ class ArchivoJuridicoFinalizadoSerializer(serializers.ModelSerializer):
         if fecha_anotada:
             return fecha_anotada
         return obj.resultado_conversion.finalizado_at
+
+    def get_tipo_norma_abreviatura(self, obj):
+        return obj.tipo_norma.abreviatura_archivo if obj.tipo_norma_id else ''
+
+    def get_efecto_normativo_abreviatura(self, obj):
+        return obj.efecto_normativo.abreviatura_archivo if obj.efecto_normativo_id else ''
 
 
 class DocumentoListSerializer(serializers.ModelSerializer):

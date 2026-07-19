@@ -84,7 +84,7 @@ const socials = [
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-[#16233d] border-t bg-[#060c1a] pt-20 pb-10">
+    <footer className="relative overflow-hidden border-[#16233d] border-t bg-[#060c1a] pt-16 pb-10 sm:pt-20">
       {/* Texto gigante de fondo */}
       <div
         className="pointer-events-none absolute right-0 bottom-0 left-0 flex select-none items-end justify-center overflow-hidden"
@@ -97,7 +97,7 @@ export function Footer() {
 
       <div className="lj-container relative z-10">
         {/* Fila superior */}
-        <div className="mb-20 grid grid-cols-1 gap-16 lg:grid-cols-12">
+        <div className="mb-14 grid grid-cols-1 gap-12 lg:mb-20 lg:grid-cols-12 lg:gap-16">
           {/* Columna de marca */}
           <div className="lg:col-span-4">
             {/* Logotipo */}
@@ -139,7 +139,7 @@ export function Footer() {
           </div>
 
           {/* Columnas de enlaces */}
-          <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 lg:col-span-8">
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:col-span-8">
             {Object.entries(footerLinks).map(([category, links]) => (
               <div key={category}>
                 <h4 className="lj-font-heading mb-5 font-black text-white text-xs uppercase tracking-widest">

@@ -226,6 +226,15 @@ class DocumentosNormativosTests(APITestCase):
         self.assertEqual(item['uuid'], str(documento.uuid))
         self.assertEqual(item['materia']['id'], documento.materia_id)
         self.assertEqual(item['tipo_norma']['id'], documento.tipo_norma_id)
+        self.assertEqual(item['titulo_archivo'], documento.titulo_archivo)
+        self.assertEqual(
+            item['tipo_norma_abreviatura'],
+            documento.tipo_norma.abreviatura_archivo,
+        )
+        self.assertEqual(
+            item['efecto_normativo_abreviatura'],
+            documento.efecto_normativo.abreviatura_archivo,
+        )
         self.assertTrue(item['conversion']['archivo_url'].endswith('/archivo-word/'))
         self.assertTrue(
             item['conversion']['archivo_pdf_url'].endswith(

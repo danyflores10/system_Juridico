@@ -38,7 +38,7 @@ export function Gallery() {
     <section id="areas" className="lj-section bg-[#081020]">
       <div className="lj-container">
         {/* Encabezado */}
-        <div className="mb-16 text-center">
+        <div className="mb-10 text-center md:mb-16">
           <FadeUp>
             <span className="mb-4 block font-semibold text-[#d4af37] text-xs uppercase tracking-[0.25em]">
               Áreas de práctica
@@ -63,7 +63,7 @@ export function Gallery() {
             transition={{ duration: 0.6, delay: 0 }}
             className="group relative col-span-1 row-span-2 cursor-pointer"
           >
-            <div className="relative h-[500px] overflow-hidden rounded-xl">
+            <div className="relative h-[400px] overflow-hidden rounded-xl sm:h-[500px]">
               <Image
                 src={practiceAreas[0].image}
                 alt={practiceAreas[0].name}
@@ -93,7 +93,7 @@ export function Gallery() {
                 transition={{ duration: 0.6, delay: 0.1 + i * 0.15 }}
                 className="group relative cursor-pointer"
               >
-                <div className="relative h-[238px] overflow-hidden rounded-xl">
+                <div className="relative h-[192px] overflow-hidden rounded-xl sm:h-[242px]">
                   <Image
                     src={area.image}
                     alt={area.name}
@@ -122,7 +122,7 @@ export function Gallery() {
             transition={{ duration: 0.6, delay: 0.35 }}
             className="group relative col-span-2 cursor-pointer"
           >
-            <div className="relative h-[500px] overflow-hidden rounded-xl">
+            <div className="relative h-[280px] overflow-hidden rounded-xl sm:h-[400px] lg:h-[500px]">
               <Image
                 src={practiceAreas[3].image}
                 alt={practiceAreas[3].name}
@@ -131,12 +131,14 @@ export function Gallery() {
                 sizes="50vw"
               />
               <div className="absolute inset-0 bg-linear-to-t from-[#081020] via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 p-6">
+              <div className="absolute bottom-0 left-0 p-4 sm:p-6">
                 <span className="mb-2 inline-block rounded-full bg-[#d4af37] px-3 py-1 font-black text-[#081020] text-[10px] uppercase tracking-widest">
                   {practiceAreas[3].tag}
                 </span>
-                <p className="lj-font-heading font-black text-2xl text-white leading-tight">{practiceAreas[3].name}</p>
-                <p className="font-semibold text-[#d4af37] text-base">{practiceAreas[3].result}</p>
+                <p className="lj-font-heading font-black text-lg text-white leading-tight sm:text-2xl">
+                  {practiceAreas[3].name}
+                </p>
+                <p className="font-semibold text-[#d4af37] text-sm sm:text-base">{practiceAreas[3].result}</p>
               </div>
             </div>
           </motion.div>

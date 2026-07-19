@@ -11,7 +11,7 @@ import { WhatsappIcon } from "./whatsapp-button";
 
 export function CtaBanner() {
   return (
-    <section className="relative overflow-hidden py-32">
+    <section className="relative overflow-hidden py-20 sm:py-24 md:py-32">
       {/* Imagen de fondo */}
       <div className="absolute inset-0">
         <Image
@@ -54,7 +54,7 @@ export function CtaBanner() {
               href="#contacto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="lj-font-heading group inline-flex items-center gap-2 rounded-full bg-[#d4af37] px-6 py-3 font-black text-[#081020] text-base uppercase tracking-wider transition-shadow duration-300 hover:shadow-[0_0_40px_rgba(212,175,55,0.45)]"
+              className="lj-font-heading group inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d4af37] px-6 py-3.5 font-black text-[#081020] text-base uppercase tracking-wider transition-shadow duration-300 hover:shadow-[0_0_40px_rgba(212,175,55,0.45)] sm:w-auto sm:py-3"
             >
               Solicitar asesoría
               <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
@@ -65,7 +65,7 @@ export function CtaBanner() {
               rel="noopener noreferrer"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="lj-font-heading inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-3 font-bold text-base text-white uppercase tracking-wider transition-colors duration-200 hover:border-[#25d366]/60 hover:text-[#25d366]"
+              className="lj-font-heading inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3.5 font-bold text-base text-white uppercase tracking-wider transition-colors duration-200 hover:border-[#25d366]/60 hover:text-[#25d366] sm:w-auto sm:py-3"
             >
               <WhatsappIcon size={18} />
               Contactar por WhatsApp

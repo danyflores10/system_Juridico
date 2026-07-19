@@ -28,7 +28,7 @@ export function WhatsappButton() {
       transition={{ delay: 1.6, duration: 0.4 }}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.92 }}
-      className="fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_4px_20px_rgba(37,211,102,0.45)] transition-shadow hover:shadow-[0_4px_30px_rgba(37,211,102,0.65)]"
+      className="fixed right-5 bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25d366] text-white shadow-[0_4px_20px_rgba(37,211,102,0.45)] transition-shadow hover:shadow-[0_4px_30px_rgba(37,211,102,0.65)] sm:right-6 sm:bottom-6"
     >
       <WhatsappIcon size={26} />
     </motion.a>

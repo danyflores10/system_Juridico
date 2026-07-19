@@ -31,11 +31,11 @@ export function About() {
   return (
     <section id="nosotros" className="lj-section overflow-hidden bg-[#081020]">
       <div className="lj-container">
-        <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-12">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
           {/* Izquierda: imagen */}
           <SlideIn direction="left" className="lg:col-span-5">
             <div className="relative">
-              <div className="relative h-[600px] overflow-hidden rounded-2xl lg:h-[700px]">
+              <div className="relative h-[420px] overflow-hidden rounded-2xl sm:h-[540px] lg:h-[700px]">
                 <Image
                   src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=900&q=85"
                   alt="Estatua de la justicia en despacho jurídico"
@@ -51,7 +51,7 @@ export function About() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="absolute -right-6 -bottom-6 rounded-xl bg-[#d4af37] px-6 py-5"
+                className="absolute -bottom-6 right-4 rounded-xl bg-[#d4af37] px-5 py-4 shadow-[0_12px_30px_rgba(0,0,0,0.35)] sm:px-6 sm:py-5 lg:-right-6"
               >
                 <p className="lj-font-heading font-black text-4xl text-[#081020] leading-none">15+</p>
                 <p className="mt-1 font-semibold text-[#081020]/70 text-xs uppercase tracking-widest">
@@ -72,7 +72,7 @@ export function About() {
             </FadeUp>
 
             <FadeUp delay={0.2}>
-              <h2 className="lj-font-heading mb-6 font-black text-5xl text-white uppercase leading-[0.95] tracking-tight md:text-6xl">
+              <h2 className="lj-font-heading mb-6 font-black text-4xl text-white uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-6xl">
                 Creado para
                 <br />
                 <span className="text-[#d4af37]">proteger,</span>

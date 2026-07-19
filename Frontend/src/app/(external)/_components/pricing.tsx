@@ -291,7 +291,7 @@ export function Pricing() {
 
       <div className="lj-container relative">
         {/* Encabezado */}
-        <div className="mb-16 text-center">
+        <div className="mb-10 text-center md:mb-16">
           <FadeUp>
             <span className="mb-4 block font-semibold text-[#d4af37] text-xs uppercase tracking-[0.25em]">
               Planes y promociones

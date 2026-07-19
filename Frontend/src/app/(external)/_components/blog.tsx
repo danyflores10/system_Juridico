@@ -45,7 +45,7 @@ export function Blog() {
     <section className="lj-section bg-[#0b1628]">
       <div className="lj-container">
         {/* Encabezado */}
-        <div className="mb-16 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div className="mb-10 flex flex-col justify-between gap-6 md:mb-16 md:flex-row md:items-end">
           <div>
             <FadeUp>
               <span className="mb-4 block font-semibold text-[#d4af37] text-xs uppercase tracking-[0.25em]">
