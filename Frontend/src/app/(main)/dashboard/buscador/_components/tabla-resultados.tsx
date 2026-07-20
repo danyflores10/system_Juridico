@@ -3,7 +3,17 @@
 import * as React from "react";
 
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, Download, Eye, Lock, MoreHorizontal, SearchX, Trash2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Eye,
+  Lock,
+  MoreHorizontal,
+  SearchCheck,
+  SearchX,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -43,6 +53,9 @@ interface PropiedadesTabla {
   plan: PlanAcceso;
   onVer: (documento: ResultadoNormativa) => void;
   onEliminado: () => void;
+  /** Consulta corregida sugerida cuando la búsqueda por contenido no arroja resultados. */
+  sugerencia?: string | null;
+  onAplicarSugerencia?: (texto: string) => void;
 }
 
 /** Convierte los marcadores [[[ ]]] de ts_headline en resaltado visual seguro. */
@@ -143,7 +156,15 @@ function FilasEsqueleto() {
   );
 }
 
-export function TablaResultados({ resultados, buscando, plan, onVer, onEliminado }: PropiedadesTabla) {
+export function TablaResultados({
+  resultados,
+  buscando,
+  plan,
+  onVer,
+  onEliminado,
+  sugerencia,
+  onAplicarSugerencia,
+}: PropiedadesTabla) {
   const [pagina, setPagina] = React.useState(0);
   const [porPagina, setPorPagina] = React.useState(10);
   const [aEliminar, setAEliminar] = React.useState<ResultadoNormativa | null>(null);
@@ -218,6 +239,22 @@ export function TablaResultados({ resultados, buscando, plan, onVer, onEliminado
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4 px-0">
+        {!buscando && sugerencia ? (
+          <div className="mx-4 flex flex-wrap items-center gap-1.5 rounded-md border border-primary/25 bg-primary/5 px-3 py-2 text-sm">
+            <SearchCheck className="size-4 shrink-0 text-primary" />
+            <span className="text-muted-foreground">
+              {resultados.length === 0 ? "Sin coincidencias exactas." : "Resultados aproximados."} ¿Quiso decir
+            </span>
+            <button
+              type="button"
+              onClick={() => onAplicarSugerencia?.(sugerencia)}
+              className="font-medium text-primary underline decoration-primary/40 underline-offset-2 transition-colors hover:decoration-primary"
+            >
+              {sugerencia}
+            </button>
+            <span className="text-muted-foreground">?</span>
+          </div>
+        ) : null}
         <Table className="**:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:px-4">
           <TableHeader>
             <TableRow>

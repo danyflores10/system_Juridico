@@ -63,15 +63,26 @@ function escaparParaIlike(texto: string): string {
 const FRACCION_MINIMA_PALABRAS = 0.6;
 
 /**
+ * Umbral de similitud de trigramas (word_similarity) para dar por buena una
+ * palabra escrita con erratas. Calibrado sobre errores reales: las variantes
+ * mal escritas (p. ej. "financeras" ≈ "financieras") puntúan ~0.55–0.9 contra
+ * el contenido, mientras que palabras ajenas puntúan ~0, así que 0.5 tolera
+ * los errores sin traer documentos irrelevantes.
+ */
+const UMBRAL_ERRATA = 0.5;
+
+/**
  * Ejecuta la búsqueda del módulo combinando los 6 criterios de la ventana de
  * búsqueda. Los criterios de nombre de archivo (tipo, número, fecha, título,
  * materia) filtran por columnas; el criterio OBJETO O CONTENIDO RESUMIDO
- * combina tres vías dentro del documento (todas insensibles a tildes):
+ * combina cuatro vías dentro del documento (todas insensibles a tildes):
  *   1. Texto completo en español con todas las palabras (websearch).
  *   2. Frase literal insensible al espaciado, para texto pegado desde un PDF
  *      con saltos de línea.
  *   3. Porcentaje de palabras encontradas, que tolera erratas del documento
  *      o texto extraído con defectos.
+ *   4. Similitud de trigramas por palabra (word_similarity): tolera erratas de
+ *      quien escribe la consulta ("financeras" encuentra "financieras").
  */
 export async function buscarNormativas(criterios: CriteriosBusqueda): Promise<FilaNormativa[]> {
   const pool = obtenerPool();
@@ -112,6 +123,14 @@ export async function buscarNormativas(criterios: CriteriosBusqueda): Promise<Fi
             WHERE busqueda @@ plainto_tsquery('spanish', palabra)
           ) >= $11
         )
+        OR (
+          cardinality($10::text[]) > 0
+          AND (
+            SELECT count(*)
+            FROM unnest($10::text[]) AS palabra
+            WHERE word_similarity(palabra, quitar_tildes(coalesce(objeto_resumido, '') || ' ' || coalesce(contenido_texto, ''))) >= $12
+          ) >= $11
+        )
       )
     ORDER BY
       CASE
@@ -140,6 +159,7 @@ export async function buscarNormativas(criterios: CriteriosBusqueda): Promise<Fi
       objetoIlike,
       palabrasObjeto,
       minimoPalabras,
+      UMBRAL_ERRATA,
     ],
   );
 
@@ -147,6 +167,65 @@ export async function buscarNormativas(criterios: CriteriosBusqueda): Promise<Fi
     ...fila,
     coincidencia: generarCoincidencia(extracto, objeto),
   }));
+}
+
+/** Umbral de similitud (whole-string) para proponer una palabra del corpus como corrección. */
+const UMBRAL_SUGERENCIA = 0.4;
+
+/**
+ * Propone una consulta corregida cuando la búsqueda por contenido no arroja
+ * resultados. Para cada palabra significativa, busca la palabra real más
+ * parecida del vocabulario de la biblioteca (similitud de trigramas) y arma la
+ * frase corregida. Devuelve null si no hay ninguna corrección que ofrecer.
+ */
+export async function sugerirConsulta(objeto: string): Promise<string | null> {
+  const palabras = palabrasClave(objeto);
+  if (palabras.length === 0) return null;
+
+  const pool = obtenerPool();
+  const { rows } = await pool.query<{ original: string; sugerida: string }>(
+    `
+    WITH consulta AS (
+      SELECT DISTINCT unnest($1::text[]) AS palabra
+    ),
+    vocabulario AS (
+      SELECT DISTINCT palabra
+      FROM public.normativas AS n,
+           LATERAL regexp_split_to_table(
+             quitar_tildes(lower(coalesce(n.objeto_resumido, '') || ' ' || coalesce(n.contenido_texto, ''))),
+             '[^a-z0-9ñ]+'
+           ) AS palabra
+      WHERE length(palabra) >= 4
+    )
+    SELECT c.palabra AS original, mejor.palabra AS sugerida
+    FROM consulta AS c
+    CROSS JOIN LATERAL (
+      SELECT v.palabra, similarity(v.palabra, c.palabra) AS sim
+      FROM vocabulario AS v
+      ORDER BY similarity(v.palabra, c.palabra) DESC, v.palabra
+      LIMIT 1
+    ) AS mejor
+    WHERE mejor.sim >= $2 AND mejor.palabra <> c.palabra
+    `,
+    [palabras, UMBRAL_SUGERENCIA],
+  );
+
+  if (rows.length === 0) return null;
+
+  const correcciones = new Map(rows.map((fila) => [fila.original, fila.sugerida]));
+  let huboCambio = false;
+  const frase = palabras
+    .map((palabra) => {
+      const corregida = correcciones.get(palabra);
+      if (corregida && corregida !== palabra) {
+        huboCambio = true;
+        return corregida;
+      }
+      return palabra;
+    })
+    .join(" ");
+
+  return huboCambio ? frase : null;
 }
 
 /** Cantidad de caracteres de contexto alrededor de la coincidencia en el extracto. */

@@ -22,10 +22,16 @@ import { CARPETAS, type Carpeta, TIPOS_NORMA } from "@/data/biblioteca-catalogo"
 
 import { CRITERIOS_INICIALES, type CriteriosBusqueda } from "./tipos";
 
+/** Acciones que el buscador puede disparar sobre el panel (p. ej. aplicar una corrección sugerida). */
+export interface PanelCriteriosHandle {
+  aplicarSugerencia: (texto: string) => void;
+}
+
 interface PropiedadesPanel {
   materias: string[];
   buscando: boolean;
   onBuscar: (criterios: CriteriosBusqueda) => void;
+  ref?: React.Ref<PanelCriteriosHandle>;
 }
 
 function EncabezadoSeccion({ icono: Icono, children }: { icono: React.ElementType; children: React.ReactNode }) {
@@ -88,7 +94,7 @@ function SelectorFecha({
   );
 }
 
-export function PanelCriterios({ materias, buscando, onBuscar }: PropiedadesPanel) {
+export function PanelCriterios({ materias, buscando, onBuscar, ref }: PropiedadesPanel) {
   const [carpetas, setCarpetas] = React.useState<Carpeta[]>([...CRITERIOS_INICIALES.carpetas]);
   const [tipos, setTipos] = React.useState<string[]>([]);
   const [numero, setNumero] = React.useState("");
@@ -113,7 +119,7 @@ export function PanelCriterios({ materias, buscando, onBuscar }: PropiedadesPane
     });
   }
 
-  function construirCriterios(): CriteriosBusqueda {
+  function construirCriterios(objetoOverride?: string): CriteriosBusqueda {
     return {
       tipos,
       numero: numero.trim(),
@@ -121,10 +127,18 @@ export function PanelCriterios({ materias, buscando, onBuscar }: PropiedadesPane
       fechaHasta: fechaHasta ? format(fechaHasta, "yyyy-MM-dd") : null,
       titulo: titulo.trim(),
       materias: materiasSeleccionadas,
-      objeto: objeto.trim(),
+      objeto: (objetoOverride ?? objeto).trim(),
       carpetas,
     };
   }
+
+  // Permite al buscador aplicar una consulta corregida: rellena el campo y busca.
+  React.useImperativeHandle(ref, () => ({
+    aplicarSugerencia(texto: string) {
+      setObjeto(texto);
+      onBuscar(construirCriterios(texto));
+    },
+  }));
 
   function limpiar() {
     setCarpetas([...CRITERIOS_INICIALES.carpetas]);

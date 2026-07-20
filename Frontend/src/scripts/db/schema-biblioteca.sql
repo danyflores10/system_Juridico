@@ -6,6 +6,10 @@
 -- Extensión para búsquedas insensibles a tildes (código == codigo).
 CREATE EXTENSION IF NOT EXISTS unaccent;
 
+-- Extensión de trigramas: habilita similarity()/word_similarity() para tolerar
+-- erratas en el criterio de contenido (p. ej. "financeras" ≈ "financieras").
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- unaccent() no es IMMUTABLE, por lo que no puede usarse en columnas generadas
 -- ni en índices. Este envoltorio fija el diccionario y sí es inmutable.
 CREATE OR REPLACE FUNCTION public.quitar_tildes(texto text)

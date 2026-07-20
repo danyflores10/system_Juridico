@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { z } from "zod";
 
-import { buscarNormativas, registrarBusqueda } from "@/server/biblioteca/consultas";
+import { buscarNormativas, registrarBusqueda, sugerirConsulta } from "@/server/biblioteca/consultas";
 
 export const runtime = "nodejs";
 
@@ -48,7 +48,11 @@ export async function POST(solicitud: Request) {
     const resultados = await buscarNormativas(criterios);
     await registrarBusqueda(criterios, resultados.length, plan);
 
-    return NextResponse.json({ total: resultados.length, resultados });
+    // Ofrece una consulta corregida cuando el término de contenido trae erratas
+    // (sirve tanto si no hubo resultados como para afinar los aproximados).
+    const sugerencia = criterios.objeto.trim() !== "" ? await sugerirConsulta(criterios.objeto) : null;
+
+    return NextResponse.json({ total: resultados.length, resultados, sugerencia });
   } catch (error) {
     console.error("Error en la búsqueda de normativas:", error);
     return NextResponse.json(

@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 import { DialogoCarga } from "./dialogo-carga";
-import { PanelCriterios } from "./panel-criterios";
+import { PanelCriterios, type PanelCriteriosHandle } from "./panel-criterios";
 import { TablaResultados } from "./tabla-resultados";
 import { CRITERIOS_INICIALES, type CriteriosBusqueda, type PlanAcceso, type ResultadoNormativa } from "./tipos";
 import { VisorDocumento } from "./visor-documento";
@@ -29,7 +29,9 @@ export function Buscador() {
   const [visorAbierto, setVisorAbierto] = React.useState(false);
   const [cargaAbierta, setCargaAbierta] = React.useState(false);
   const [sincronizando, setSincronizando] = React.useState(false);
+  const [sugerencia, setSugerencia] = React.useState<string | null>(null);
 
+  const panelRef = React.useRef<PanelCriteriosHandle>(null);
   const planRef = React.useRef(plan);
   planRef.current = plan;
 
@@ -53,20 +55,24 @@ export function Buscador() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...criterios, plan: planRef.current }),
       });
-      const datos: { resultados?: ResultadoNormativa[]; error?: string } = await respuesta.json();
+      const datos: { resultados?: ResultadoNormativa[]; sugerencia?: string | null; error?: string } =
+        await respuesta.json();
 
       if (!respuesta.ok) {
         toast.error(datos.error ?? "No fue posible ejecutar la búsqueda.");
         setResultados([]);
+        setSugerencia(null);
         return;
       }
 
       setResultados(datos.resultados ?? []);
+      setSugerencia(datos.sugerencia ?? null);
     } catch {
       toast.error("No fue posible comunicarse con el servidor.", {
         description: "Verifique que la base de datos systemJuridico esté disponible.",
       });
       setResultados([]);
+      setSugerencia(null);
     } finally {
       setBuscando(false);
     }
@@ -183,6 +189,7 @@ export function Buscador() {
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(300px,340px)_minmax(0,1fr)]">
         <PanelCriterios
+          ref={panelRef}
           materias={materias}
           buscando={buscando}
           onBuscar={(criterios) => void ejecutarBusqueda(criterios)}
@@ -193,6 +200,8 @@ export function Buscador() {
           plan={plan}
           onVer={verDocumento}
           onEliminado={refrescar}
+          sugerencia={sugerencia}
+          onAplicarSugerencia={(texto) => panelRef.current?.aplicarSugerencia(texto)}
         />
       </div>
 
