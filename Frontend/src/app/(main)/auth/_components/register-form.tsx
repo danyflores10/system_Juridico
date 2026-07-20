@@ -1,17 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
+
+import { useRegisterSubmit } from "./use-auth-submit";
 
 const formSchema = z
   .object({
@@ -25,20 +24,8 @@ const formSchema = z
     path: ["confirmPassword"],
   });
 
-function extraerMensajeError(payload: unknown): string {
-  if (payload && typeof payload === "object") {
-    const registro = payload as Record<string, unknown>;
-    for (const clave of ["detail", "non_field_errors", "email", "password", "nombre"]) {
-      const valor = registro[clave];
-      if (typeof valor === "string") return valor;
-      if (Array.isArray(valor) && typeof valor[0] === "string") return valor[0];
-    }
-  }
-  return "No se pudo completar el registro. Inténtalo de nuevo.";
-}
-
 export function RegisterForm() {
-  const router = useRouter();
+  const onSubmit = useRegisterSubmit();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,36 +35,6 @@ export function RegisterForm() {
       confirmPassword: "",
     },
   });
-
-  const onSubmit = async (valores: z.infer<typeof formSchema>) => {
-    // Separa el nombre completo en nombre y apellido para el backend.
-    const [nombre, ...resto] = valores.nombre.trim().split(/\s+/);
-    const respuesta = await fetch("/api/auth/registro", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nombre,
-        apellido: resto.join(" "),
-        email: valores.email,
-        password: valores.password,
-      }),
-    }).catch(() => null);
-
-    if (!respuesta) {
-      toast.error("Sin conexión", { description: "No se pudo contactar al servidor." });
-      return;
-    }
-
-    const datos: unknown = await respuesta.json().catch(() => null);
-    if (!respuesta.ok) {
-      toast.error("No se pudo registrar", { description: extraerMensajeError(datos) });
-      return;
-    }
-
-    toast.success("Registro correcto", { description: "Ingresando al panel principal." });
-    router.replace("/dashboard/default");
-    router.refresh();
-  };
 
   const enviando = form.formState.isSubmitting;
 

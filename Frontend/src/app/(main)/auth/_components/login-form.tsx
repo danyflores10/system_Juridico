@@ -1,11 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -14,26 +11,16 @@ import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/compo
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 
+import { useLoginSubmit } from "./use-auth-submit";
+
 const formSchema = z.object({
   email: z.string().email({ message: "Ingresa un correo electrónico válido." }),
   password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
   remember: z.boolean().optional(),
 });
 
-function extraerMensajeError(payload: unknown): string {
-  if (payload && typeof payload === "object") {
-    const registro = payload as Record<string, unknown>;
-    for (const clave of ["detail", "non_field_errors", "email", "password"]) {
-      const valor = registro[clave];
-      if (typeof valor === "string") return valor;
-      if (Array.isArray(valor) && typeof valor[0] === "string") return valor[0];
-    }
-  }
-  return "No se pudo iniciar sesión. Inténtalo de nuevo.";
-}
-
 export function LoginForm() {
-  const router = useRouter();
+  const onSubmit = useLoginSubmit();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -42,32 +29,6 @@ export function LoginForm() {
       remember: false,
     },
   });
-
-  const onSubmit = async (valores: z.infer<typeof formSchema>) => {
-    const respuesta = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(valores),
-    }).catch(() => null);
-
-    if (!respuesta) {
-      toast.error("Sin conexión", { description: "No se pudo contactar al servidor." });
-      return;
-    }
-
-    const datos: unknown = await respuesta.json().catch(() => null);
-    if (!respuesta.ok) {
-      toast.error("No se pudo iniciar sesión", { description: extraerMensajeError(datos) });
-      return;
-    }
-
-    const usuario = (datos as { usuario?: { nombre?: string } }).usuario;
-    toast.success(`¡Bienvenido${usuario?.nombre ? `, ${usuario.nombre}` : ""}!`, {
-      description: "Ingresando al panel principal.",
-    });
-    router.replace("/dashboard/default");
-    router.refresh();
-  };
 
   const enviando = form.formState.isSubmitting;
 

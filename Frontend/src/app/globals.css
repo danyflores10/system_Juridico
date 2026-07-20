@@ -376,3 +376,69 @@ html {
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* Campos con etiqueta flotante y subrayado animado (pantallas de acceso). */
+.auth-field-input::placeholder {
+  color: transparent;
+}
+
+.auth-field-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #5c7899;
+  pointer-events: none;
+  transition:
+    top 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    font-size 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    letter-spacing 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.22s ease;
+}
+
+/* Estado en reposo: la etiqueta baja y hace de placeholder. */
+.auth-field-input:placeholder-shown:not(:focus) + .auth-field-label {
+  top: 1.6rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: #9aabc0;
+}
+
+.auth-field-input:focus + .auth-field-label {
+  color: #1279fd;
+}
+
+.auth-field-input[aria-invalid="true"] + .auth-field-label {
+  color: #e11d48;
+}
+
+/* Subrayado que crece de izquierda a derecha al enfocar. */
+.auth-field-underline {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-field-input:focus ~ .auth-field-underline {
+  transform: scaleX(1);
+}
+
+/* Evita el relleno amarillo de autocompletado dentro de la tarjeta blanca. */
+.auth-field-input:-webkit-autofill,
+.auth-field-input:-webkit-autofill:hover,
+.auth-field-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0b1d3a;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-field-label,
+  .auth-field-underline {
+    transition: none;
+  }
+}
