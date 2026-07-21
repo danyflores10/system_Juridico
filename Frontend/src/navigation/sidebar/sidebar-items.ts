@@ -1,5 +1,6 @@
 import {
   Banknote,
+  BookOpen,
   Calendar,
   ChartBar,
   CheckSquare,
@@ -131,6 +132,15 @@ export const sidebarItems: NavGroup[] = [
         title: "Buscador jurídico",
         url: "/dashboard/buscador",
         icon: Search,
+      },
+      {
+        id: "libros",
+        title: "Libros",
+        icon: BookOpen,
+        subItems: [
+          { id: "libros-catalogo", title: "Biblioteca de libros", url: "/dashboard/libros" },
+          { id: "libros-cargar", title: "Subir libro", url: "/dashboard/libros/cargar" },
+        ],
       },
       {
         id: "users",

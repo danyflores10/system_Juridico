@@ -2,17 +2,18 @@
 
 import * as React from "react";
 
-import { ChevronLeft, ChevronRight, FileX2, Search, ShieldAlert, ZoomIn, ZoomOut } from "lucide-react";
+import { BookOpenCheck, ChevronLeft, ChevronRight, FileX2, Search, ZoomIn, ZoomOut } from "lucide-react";
 import type { PDFDocumentLoadingTask, PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 
 import { BarraBusquedaVisor, MINIMO_CONSULTA } from "@/components/biblioteca/barra-busqueda-visor";
+import { CargadorLibro } from "@/components/biblioteca/cargador-libro";
+import { MarcaAguaLibro } from "@/components/biblioteca/marca-agua";
 import {
   type CoincidenciaPdf,
   calcularCoincidenciasPdf,
   type ItemTextoPdf,
   type ModuloPdfjs,
   type PaginaIndexada,
-  type RectResaltado,
   TextoResaltado,
 } from "@/components/biblioteca/pdf-coincidencias";
 import {
@@ -25,25 +26,26 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Spinner } from "@/components/ui/spinner";
-import { nombreTipoNorma } from "@/data/biblioteca-catalogo";
 import { buscarCoincidencias, type RangoCoincidencia } from "@/lib/texto-busqueda";
 import { cn } from "@/lib/utils";
 
-import type { PlanAcceso, ResultadoNormativa } from "./tipos";
+import type { Libro } from "./tipos";
 
-interface PropiedadesVisor {
-  documento: ResultadoNormativa | null;
-  plan: PlanAcceso;
+interface PropiedadesVisorLibro {
+  libro: Libro | null;
   abierto: boolean;
   onOpenChange: (abierto: boolean) => void;
-  /** Término buscado por contenido: al abrir, salta directo a esa palabra dentro del documento. */
-  terminoInicial?: string;
 }
 
 type EstadoVisor = "cargando" | "listo" | "error";
 
-export function VisorDocumento({ documento, plan, abierto, onOpenChange, terminoInicial }: PropiedadesVisor) {
+/**
+ * Lector del catálogo de libros. Todos los libros son de SOLO LECTURA: el
+ * contenido se muestra dentro del visor con la misma protección anti-captura
+ * del buscador jurídico (lente de lectura, bloqueo al perder el foco, veto a
+ * copiar/imprimir y marca de agua), y nunca se ofrece descarga.
+ */
+export function VisorLibro({ libro, abierto, onOpenChange }: PropiedadesVisorLibro) {
   const [estado, setEstado] = React.useState<EstadoVisor>("cargando");
   const [mensajeError, setMensajeError] = React.useState("");
   const [pagina, setPagina] = React.useState(1);
@@ -51,7 +53,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
   const [escala, setEscala] = React.useState(1.2);
   const [texto, setTexto] = React.useState<string | null>(null);
 
-  // Búsqueda interna del documento (Ctrl+F).
+  // Búsqueda dentro del libro (Ctrl+F).
   const [busquedaVisible, setBusquedaVisible] = React.useState(false);
   const [consulta, setConsulta] = React.useState("");
   const [indexando, setIndexando] = React.useState(false);
@@ -70,49 +72,39 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
   const busquedaVisibleRef = React.useRef(false);
   busquedaVisibleRef.current = busquedaVisible;
 
-  // Término de contenido con el que se abre el visor (se lee solo al cargar).
-  const terminoInicialRef = React.useRef(terminoInicial);
-  terminoInicialRef.current = terminoInicial;
-
-  const esPdf = documento?.extension === "pdf";
-  const restringido = documento?.carpeta === "ACTUALIZADA";
+  const esPdf = libro?.extension === "pdf";
   const totalCoincidencias = esPdf ? coincidenciasPdf.length : rangosTexto.length;
 
-  // Protección anti-captura activa mientras el visor esté abierto.
   const { motivo, bloqueado, continuar } = useProteccionCaptura(abierto);
   const lente = useLenteLectura(abierto && estado === "listo");
 
-  // Carga del documento al abrir el visor.
+  // Carga del libro al abrir el visor.
   React.useEffect(() => {
-    if (!abierto || !documento) return;
+    if (!abierto || !libro) return;
 
     let cancelado = false;
-    // Si el documento se abrió tras una búsqueda por contenido, precarga ese
-    // término para saltar directo a la palabra en cuanto el documento esté listo.
-    const terminoApertura = (terminoInicialRef.current ?? "").trim();
-    const abrirConBusqueda = terminoApertura.length >= MINIMO_CONSULTA;
 
     setEstado("cargando");
     setMensajeError("");
     setTexto(null);
     setPagina(1);
     setTotalPaginas(0);
-    setBusquedaVisible(abrirConBusqueda);
-    setConsulta(abrirConBusqueda ? terminoApertura : "");
+    setBusquedaVisible(false);
+    setConsulta("");
     setCoincidenciasPdf([]);
     setRangosTexto([]);
     setIndiceActual(0);
     indicePdfRef.current = null;
 
     async function cargar() {
-      if (!documento) return;
+      if (!libro) return;
 
       try {
-        if (documento.extension === "pdf") {
-          const respuesta = await fetch(`/api/biblioteca/documentos/${documento.id}/archivo?plan=${plan}`);
+        if (libro.extension === "pdf") {
+          const respuesta = await fetch(`/api/biblioteca/libros/${libro.id}/archivo`);
           if (!respuesta.ok) {
             const datos: { error?: string } | null = await respuesta.json().catch(() => null);
-            throw new Error(datos?.error ?? "No fue posible obtener el documento.");
+            throw new Error(datos?.error ?? "No fue posible obtener el libro.");
           }
 
           const binario = await respuesta.arrayBuffer();
@@ -134,9 +126,9 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
           setTotalPaginas(cargado.numPages);
           setEstado("listo");
         } else {
-          const respuesta = await fetch(`/api/biblioteca/documentos/${documento.id}/texto?plan=${plan}`);
+          const respuesta = await fetch(`/api/biblioteca/libros/${libro.id}/texto`);
           const datos: { texto?: string; error?: string } = await respuesta.json();
-          if (!respuesta.ok) throw new Error(datos.error ?? "No fue posible obtener el documento.");
+          if (!respuesta.ok) throw new Error(datos.error ?? "No fue posible obtener el libro.");
           if (cancelado) return;
 
           setTexto(datos.texto ?? "");
@@ -144,7 +136,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
         }
       } catch (error) {
         if (!cancelado) {
-          setMensajeError(error instanceof Error ? error.message : "Error inesperado al abrir el documento.");
+          setMensajeError(error instanceof Error ? error.message : "Error inesperado al abrir el libro.");
           setEstado("error");
         }
       }
@@ -163,9 +155,9 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
         tareaCargaRef.current = null;
       }
     };
-  }, [abierto, documento, plan]);
+  }, [abierto, libro]);
 
-  // Dibuja la página actual del PDF en el lienzo.
+  // Dibuja la página actual del libro en el lienzo.
   React.useEffect(() => {
     if (estado !== "listo" || !esPdf) return;
 
@@ -201,7 +193,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
       } catch (error) {
         const nombre = (error as { name?: string }).name;
         if (nombre !== "RenderingCancelledException" && !cancelado) {
-          console.error("Error al dibujar la página del PDF:", error);
+          console.error("Error al dibujar la página del libro:", error);
         }
       }
     }
@@ -213,7 +205,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
     };
   }, [estado, esPdf, pagina, escala]);
 
-  /** Extrae (una sola vez por documento) el texto de todas las páginas del PDF. */
+  /** Extrae (una sola vez por libro) el texto de todas las páginas del PDF. */
   const obtenerIndicePdf = React.useCallback((): Promise<PaginaIndexada[]> => {
     const documentoPdf = pdfRef.current;
     if (!documentoPdf) return Promise.resolve([]);
@@ -275,7 +267,8 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
     };
   }, [busquedaVisible, consulta, estado, esPdf, texto, obtenerIndicePdf]);
 
-  // Atajos de teclado: Ctrl+F abre la búsqueda, Esc la cierra sin cerrar el visor.
+  // Atajos: Ctrl+F abre la búsqueda, Esc la cierra sin cerrar el visor,
+  // y las flechas pasan de página cuando la búsqueda no tiene el foco.
   React.useEffect(() => {
     if (!abierto) return;
 
@@ -307,10 +300,6 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
     [totalCoincidencias, esPdf, coincidenciasPdf],
   );
 
-  /**
-   * Al montarse el resaltado de la coincidencia actual, la lente se desplaza
-   * hasta él y revela (desborrosa) esa franja, siguiéndola durante el scroll.
-   */
   const { seguirCoincidencia, recalcular: recalcularLente } = lente;
   const marcarRefActual = React.useCallback(
     (nodo: HTMLElement | null) => {
@@ -330,60 +319,61 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
     window.setTimeout(() => inputBusquedaRef.current?.select(), 0);
   }
 
-  // Rectángulos a pintar sobre la página visible del PDF.
+  // Rectángulos a pintar sobre la página visible del libro.
   const resaltadosPagina = React.useMemo(() => {
     if (!busquedaVisible || !esPdf) return [];
 
-    const lista: { clave: string; rect: RectResaltado; actual: boolean; primero: boolean }[] = [];
+    const lista: {
+      clave: string;
+      rect: { x: number; y: number; ancho: number; alto: number };
+      actual: boolean;
+      primero: boolean;
+    }[] = [];
     coincidenciasPdf.forEach((coincidencia, indice) => {
       if (coincidencia.pagina !== pagina) return;
       coincidencia.rects.forEach((rect, posicion) => {
-        lista.push({
-          clave: `${indice}-${posicion}`,
-          rect,
-          actual: indice === indiceActual,
-          primero: posicion === 0,
-        });
+        lista.push({ clave: `${indice}-${posicion}`, rect, actual: indice === indiceActual, primero: posicion === 0 });
       });
     });
     return lista;
   }, [busquedaVisible, esPdf, coincidenciasPdf, pagina, indiceActual]);
 
-  /**
-   * Copia, arrastre y menú contextual vetados en todo documento del visor:
-   * "Guardar imagen como…" o Ctrl+C copiarían el contenido renderizado.
-   */
+  /** Copia, arrastre y menú contextual vetados: el catálogo es de solo lectura. */
   function bloquearCopia(evento: React.SyntheticEvent) {
     evento.preventDefault();
   }
 
-  if (!documento) return null;
+  if (!libro) return null;
+
+  const fichaBreve = [libro.editorial, libro.edicion, libro.anioPublicacion?.toString()].filter(
+    (dato): dato is string => Boolean(dato && dato !== ""),
+  );
 
   return (
     <Dialog open={abierto} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[90vh] flex-col gap-0 p-0 sm:max-w-6xl print:hidden">
+      <DialogContent className="flex h-[92vh] flex-col gap-0 p-0 sm:max-w-6xl print:hidden">
         <DialogHeader className="gap-2 border-b px-6 py-4">
-          <DialogTitle className="pr-8 text-base leading-snug">{documento.titulo}</DialogTitle>
-          <DialogDescription className="sr-only">Visor del documento {documento.nombreArchivo}</DialogDescription>
+          <DialogTitle className="pr-8 text-base leading-snug">{libro.titulo}</DialogTitle>
+          <DialogDescription className="sr-only">Lector protegido del libro {libro.titulo}</DialogDescription>
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="outline" className="font-mono text-[10px]">
-              {documento.tipoNorma}
-            </Badge>
             <Badge variant="secondary" className="font-normal text-[10px]">
-              {nombreTipoNorma(documento.tipoNorma)} {documento.numero}
+              {libro.autor}
             </Badge>
-            <Badge variant="secondary" className="font-normal text-[10px]">
-              {documento.materia}
+            <Badge variant="outline" className="font-normal text-[10px]">
+              {libro.materia}
             </Badge>
-            {restringido ? (
-              <Badge
-                variant="outline"
-                className="gap-1 border-amber-300 bg-amber-50 font-normal text-[10px] text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
-              >
-                <ShieldAlert className="size-3" />
-                Copia restringida
+            {fichaBreve.length > 0 ? (
+              <Badge variant="outline" className="font-normal text-[10px] text-muted-foreground">
+                {fichaBreve.join(" · ")}
               </Badge>
             ) : null}
+            <Badge
+              variant="outline"
+              className="gap-1 border-emerald-300 bg-emerald-50 font-normal text-[10px] text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+            >
+              <BookOpenCheck className="size-3" />
+              Solo lectura
+            </Badge>
           </div>
         </DialogHeader>
 
@@ -442,30 +432,21 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
                 </Button>
               </>
             ) : (
-              <span className="text-muted-foreground text-sm">Vista de texto del documento</span>
+              <span className="text-muted-foreground text-sm">Vista de texto del libro</span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={estado !== "listo"}
-              onClick={abrirBusqueda}
-              title="Buscar en el documento (Ctrl+F)"
-            >
-              <Search className="size-3.5" />
-              Buscar
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={estado !== "listo"}
+            onClick={abrirBusqueda}
+            title="Buscar en el libro (Ctrl+F)"
+          >
+            <Search className="size-3.5" />
+            Buscar en el libro
+          </Button>
         </div>
-
-        {restringido ? (
-          <div className="flex items-center gap-2 border-amber-200 border-b bg-amber-50 px-6 py-2 text-amber-800 text-xs dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
-            <ShieldAlert className="size-3.5 shrink-0" />
-            Normativa actualizada: documento de solo lectura con restricción de copia de texto.
-          </div>
-        ) : null}
 
         <div className="relative min-h-0 flex-1">
           {busquedaVisible ? (
@@ -483,35 +464,23 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
             />
           ) : null}
 
-          {restringido ? (
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-around overflow-hidden"
-            >
-              {["marca-1", "marca-2", "marca-3"].map((marca) => (
-                <span
-                  key={marca}
-                  className="-rotate-[24deg] whitespace-nowrap font-black text-6xl text-foreground/[0.05] tracking-[0.35em]"
-                >
-                  CONSULTOR JURÍDICO
-                </span>
-              ))}
-            </div>
-          ) : null}
+          {/* En PDF la marca va estampada en cada hoja; en la vista de texto no
+              hay páginas, así que se centra sobre el área de lectura. */}
+          {estado === "listo" && !esPdf ? <MarcaAguaLibro /> : null}
 
           {estado === "listo" ? <LenteLectura lenteRef={lente.lenteRef} /> : null}
 
           {estado === "listo" && !lente.revelando && !bloqueado ? (
             <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center">
               <span className="rounded-full border bg-background/90 px-4 py-1.5 text-muted-foreground text-xs shadow-sm backdrop-blur-sm">
-                Vista protegida: mueva el cursor sobre el documento para leer
+                Vista protegida: mueva el cursor sobre el libro para leer
               </span>
             </div>
           ) : null}
 
           <EscudoCaptura motivo={motivo} onContinuar={continuar} />
 
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: bloqueo de copia/menú contextual exigido por el módulo para proteger los documentos */}
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: bloqueo de copia/menú contextual exigido por el módulo para proteger los libros */}
           <div
             ref={lente.contenedorRef}
             className={cn("h-full select-none overflow-auto bg-muted/40 p-6", bloqueado && "blur-2xl")}
@@ -524,10 +493,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
           >
             {estado === "cargando" ? (
               <div className="flex h-full items-center justify-center">
-                <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                  <Spinner className="size-6" />
-                  <span className="text-sm">Cargando documento…</span>
-                </div>
+                <CargadorLibro />
               </div>
             ) : null}
 
@@ -544,6 +510,7 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
               <div className="flex min-h-full items-start justify-center">
                 <div className="relative">
                   <canvas ref={canvasRef} className="rounded-sm shadow-lg ring-1 ring-border" />
+                  <MarcaAguaLibro />
                   {resaltadosPagina.length > 0 ? (
                     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
                       {resaltadosPagina.map((resaltado) => (
@@ -570,7 +537,8 @@ export function VisorDocumento({ documento, plan, abierto, onOpenChange, termino
 
             {estado === "listo" && !esPdf && texto !== null ? (
               <div className="mx-auto max-w-3xl rounded-sm bg-background p-8 shadow-lg ring-1 ring-border">
-                <h3 className="mb-4 font-semibold text-lg leading-snug">{documento.titulo}</h3>
+                <h3 className="mb-1 font-semibold text-lg leading-snug">{libro.titulo}</h3>
+                <p className="mb-5 text-muted-foreground text-sm">{libro.autor}</p>
                 <div className="whitespace-pre-wrap text-sm leading-relaxed">
                   {busquedaVisible && rangosTexto.length > 0 ? (
                     <TextoResaltado

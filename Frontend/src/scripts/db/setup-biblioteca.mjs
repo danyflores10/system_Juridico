@@ -1,6 +1,6 @@
 /**
- * Crea (o actualiza) el esquema del Módulo 3 — Buscador Jurídico
- * en la base de datos systemJuridico.
+ * Crea (o actualiza) el esquema del Módulo 3 — Buscador Jurídico y el de la
+ * biblioteca de libros en la base de datos systemJuridico.
  *
  * Uso: npm run db:setup
  */
@@ -19,8 +19,13 @@ async function principal() {
   await cliente.connect();
 
   try {
-    const sql = readFileSync(path.join(directorio, "schema-biblioteca.sql"), "utf-8");
-    await cliente.query(sql);
+    // El esquema de libros reutiliza las extensiones y quitar_tildes() que
+    // define el de la biblioteca, así que el orden importa.
+    for (const archivo of ["schema-biblioteca.sql", "schema-libros.sql"]) {
+      const sql = readFileSync(path.join(directorio, archivo), "utf-8");
+      await cliente.query(sql);
+      console.log(`Aplicado: ${archivo}`);
+    }
 
     const { rows } = await cliente.query(
       `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`,
